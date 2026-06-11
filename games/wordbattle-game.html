@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Word Battle – PixelPlay</title>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#DDE8F5;--navy:#2A3660;--navy2:#1D284A;
+  --red:#E84040;--blue:#38AAEE;--green:#3DC46A;
+  --yellow:#F5C200;--purple:#8B5CF6;--orange:#F97316;
+  --subtext:#7A8FAD;
+}
+body{background:var(--bg);font-family:'Nunito',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+
+/* START */
+#startScreen{display:flex;flex-direction:column;align-items:center;gap:18px;padding:30px 20px;width:100%;max-width:420px}
+.start-emoji{font-size:64px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.start-title{font-family:'Lilita One',cursive;font-size:38px;color:var(--navy);text-shadow:3px 3px 0 var(--navy2)}
+.start-subtitle{font-size:14px;color:var(--subtext);font-weight:700;text-align:center}
+.mode-label{font-size:12px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:1px;align-self:flex-start}
+.toggle-row{display:flex;gap:8px;width:100%}
+.toggle-btn{flex:1;padding:10px 8px;border:3px solid var(--navy);border-radius:12px;background:#fff;color:var(--navy);font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:all .15s}
+.toggle-btn.active{background:var(--navy);color:#fff;box-shadow:3px 3px 0 var(--navy2)}
+.play-btn{width:100%;padding:16px;border:none;border-radius:16px;background:var(--navy);color:#fff;font-family:'Lilita One',cursive;font-size:22px;cursor:pointer;box-shadow:0 6px 0 var(--navy2);transition:all .1s}
+.play-btn:active{transform:translateY(3px);box-shadow:0 3px 0 var(--navy2)}
+
+/* GAME SCREEN */
+#gameScreen{display:none;flex-direction:column;width:100%;height:100vh;max-width:500px}
+.top-bar{background:var(--navy);display:flex;align-items:center;justify-content:space-between;padding:10px 14px;flex-shrink:0}
+.top-bar a{color:#fff;text-decoration:none;font-size:20px}
+.top-bar .game-title{font-family:'Lilita One',cursive;font-size:18px;color:#fff;flex:1;text-align:center}
+.mode-badge{background:var(--yellow);color:var(--navy);font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px}
+
+.game-area{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px;overflow:hidden}
+
+/* Score strip */
+.score-strip{display:flex;gap:8px;width:100%;justify-content:center}
+.score-box{flex:1;background:#fff;border:3px solid var(--navy);border-radius:10px;padding:5px 8px;text-align:center;max-width:120px}
+.score-box.active{border-color:var(--yellow);background:#FFFDE7;box-shadow:0 0 0 2px var(--yellow)}
+.sb-name{font-size:10px;font-weight:800;color:var(--subtext)}
+.sb-score{font-family:'Lilita One',cursive;font-size:20px;color:var(--navy)}
+
+/* Board */
+.board-container{width:100%;flex-shrink:0}
+#boardDiv{display:grid;grid-template-columns:repeat(15,1fr);gap:1px;background:var(--navy);border:2px solid var(--navy);border-radius:4px;width:100%;user-select:none}
+.cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;cursor:pointer;position:relative;transition:background .1s}
+.cell.empty{background:#f9f5e8}
+.cell.tws{background:#E84040;color:#fff}
+.cell.dws{background:#ffb3b3;color:var(--navy)}
+.cell.tls{background:#38AAEE;color:#fff}
+.cell.dls{background:#b3d9ff;color:var(--navy)}
+.cell.center{background:#ffb3b3}
+.cell.placed{background:#fff;border:1px solid #ccc}
+.cell.placed .tile{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--yellow);color:var(--navy);font-weight:800;border-radius:1px;position:relative}
+.cell.placed .tile .pts{position:absolute;bottom:0;right:1px;font-size:6px;font-weight:800}
+.cell.locked .tile{background:#d4af37;color:#fff}
+.cell.preview .tile{background:#b0e0b0;color:var(--navy);opacity:.85}
+.cell.selected-rack{outline:3px solid var(--yellow)}
+
+/* Rack */
+.rack-section{width:100%}
+.rack-label{font-size:10px;font-weight:800;color:var(--subtext);margin-bottom:4px}
+.rack{display:flex;gap:4px;justify-content:center;flex-wrap:wrap}
+.rack-tile{width:36px;height:44px;background:var(--yellow);color:var(--navy);border:2px solid #cca800;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:16px;cursor:pointer;position:relative;transition:all .1s;box-shadow:2px 2px 0 #a08000;flex-shrink:0}
+.rack-tile:active,.rack-tile.selected{transform:translateY(-6px);box-shadow:2px 8px 0 #a08000;border-color:var(--navy)}
+.rack-tile .pts{position:absolute;bottom:2px;right:3px;font-size:8px;font-weight:800}
+.rack-tile.blank-tile{background:#eee;border-color:#999;color:#333}
+
+/* Actions */
+.action-row{display:flex;gap:6px;width:100%;justify-content:center;flex-wrap:wrap}
+.act-btn{padding:8px 12px;border:3px solid var(--navy);border-radius:10px;background:#fff;color:var(--navy);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:all .1s}
+.act-btn:active,.act-btn.primary{background:var(--navy);color:#fff}
+.act-btn.primary{box-shadow:3px 3px 0 var(--navy2)}
+.act-btn:disabled{opacity:0.4;cursor:default}
+
+.bottom-bar{background:#fff;border-top:3px solid var(--navy);display:flex;align-items:center;justify-content:space-between;padding:10px 14px;flex-shrink:0}
+.score-block{font-family:'Lilita One',cursive;font-size:20px;color:var(--navy)}
+.score-block small{font-family:'Nunito',sans-serif;font-size:10px;color:var(--subtext);display:block;font-weight:700}
+.bar-btn{padding:9px 16px;border:3px solid var(--navy);border-radius:12px;background:#fff;color:var(--navy);font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer}
+.bar-btn:active{background:var(--navy);color:#fff}
+
+/* Blank tile dialog */
+#blankDialog{display:none;position:fixed;inset:0;background:rgba(26,32,60,.85);align-items:center;justify-content:center;z-index:200;padding:20px}
+.bd-card{background:#fff;border:4px solid var(--navy);border-radius:20px;padding:20px;max-width:340px;width:100%;text-align:center;box-shadow:6px 6px 0 var(--navy2)}
+.bd-title{font-family:'Lilita One',cursive;font-size:20px;color:var(--navy);margin-bottom:12px}
+.bd-input{width:100%;padding:10px;border:3px solid var(--navy);border-radius:10px;font-size:24px;text-align:center;font-weight:800;text-transform:uppercase;margin-bottom:12px}
+.bd-btn{padding:10px 24px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-family:'Lilita One',cursive;font-size:16px;cursor:pointer}
+
+/* OVERLAY */
+#overlay{display:none;position:fixed;inset:0;background:rgba(26,32,60,.85);align-items:center;justify-content:center;z-index:100;padding:20px}
+.overlay-card{background:#fff;border:4px solid var(--navy);border-radius:24px;padding:28px;max-width:320px;width:100%;text-align:center;box-shadow:6px 6px 0 var(--navy2)}
+.overlay-emoji{font-size:56px;display:block;margin-bottom:10px}
+.overlay-title{font-family:'Lilita One',cursive;font-size:26px;color:var(--navy);margin-bottom:6px}
+.overlay-msg{font-size:13px;color:var(--subtext);font-weight:700;margin-bottom:18px}
+.overlay-btns{display:flex;gap:12px;justify-content:center}
+.overlay-btns button{padding:11px 20px;border:3px solid var(--navy);border-radius:13px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer}
+.btn-primary{background:var(--navy);color:#fff;box-shadow:3px 3px 0 var(--navy2)}
+.btn-secondary{background:#fff;color:var(--navy)}
+
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:8px 20px;border-radius:20px;font-weight:800;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:300;white-space:nowrap}
+#toast.show{opacity:1}
+</style>
+<style>
+#pp-back {
+    position: fixed !important;
+    top: 14px !important;
+    left: 14px !important;
+    z-index: 2147483647 !important;
+    display: flex;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 8px 16px 8px 12px !important;
+    background: #2A3660 !important;
+    color: #ffffff !important;
+    font-family: 'Lilita One', Arial, sans-serif !important;
+    font-size: 15px !important;
+    text-decoration: none !important;
+    border-radius: 50px !important;
+    border: 2px solid rgba(255,255,255,0.25) !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4), 3px 3px 0 #1D284A !important;
+    letter-spacing: 0.3px !important;
+    -webkit-tap-highlight-color: transparent !important;
+    pointer-events: all !important;
+}
+#pp-back::before { content: '←' !important; font-size: 16px !important; }
+#pp-back:active { transform: translate(2px,2px) !important; box-shadow: 1px 1px 0 #1D284A !important; }
+</style>
+</head>
+<body>
+<a id="pp-back" href="../index.html">PixelPlay</a>
+
+<!-- START -->
+<div id="startScreen">
+  <div class="start-emoji">🔤</div>
+  <div class="start-title">Word Battle</div>
+  <div class="start-subtitle">Scrabble-style crossword challenge</div>
+
+  <div class="mode-label">Mode</div>
+  <div class="toggle-row">
+    <button class="toggle-btn active" data-group="mode" data-val="vsAI">vs AI</button>
+    <button class="toggle-btn" data-group="mode" data-val="vs2P">2 Players</button>
+  </div>
+
+  <div class="mode-label">AI Difficulty</div>
+  <div class="toggle-row">
+    <button class="toggle-btn active" data-group="diff" data-val="easy">Easy</button>
+    <button class="toggle-btn" data-group="diff" data-val="medium">Medium</button>
+    <button class="toggle-btn" data-group="diff" data-val="hard">Hard</button>
+  </div>
+
+  <button class="play-btn" onclick="startGame()">PLAY</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="gameScreen">
+  <div class="top-bar">
+    <div style="min-width:24px;"></div>
+    <div class="game-title">Word Battle</div>
+    <div class="mode-badge" id="modeBadge">VS AI</div>
+  </div>
+
+  <div class="game-area">
+    <div class="score-strip" id="scoreStrip"></div>
+    <div class="board-container">
+      <div id="boardDiv"></div>
+    </div>
+    <div class="rack-section">
+      <div class="rack-label" id="rackLabel">YOUR TILES</div>
+      <div class="rack" id="rackDiv"></div>
+    </div>
+    <div class="action-row">
+      <button class="act-btn primary" onclick="submitWord()">Play Word</button>
+      <button class="act-btn" onclick="shuffleRack()">Shuffle</button>
+      <button class="act-btn" onclick="exchangeTiles()">Exchange</button>
+      <button class="act-btn" onclick="passTurn()">Pass</button>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="score-block"><small>TILES LEFT</small><span id="tilesLeft">0</span></div>
+    <button class="bar-btn" onclick="restartGame()">Restart</button>
+  </div>
+</div>
+
+<!-- BLANK TILE -->
+<div id="blankDialog">
+  <div class="bd-card">
+    <div class="bd-title">Blank Tile — Choose a Letter</div>
+    <input class="bd-input" id="blankInput" maxlength="1" placeholder="A">
+    <br>
+    <button class="bd-btn" onclick="confirmBlank()">Confirm</button>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div id="overlay">
+  <div class="overlay-card">
+    <span class="overlay-emoji" id="overlayEmoji">🔤</span>
+    <div class="overlay-title" id="overlayTitle">Game Over</div>
+    <div class="overlay-msg" id="overlayMsg"></div>
+    <div class="overlay-btns">
+      <button class="btn-primary" onclick="restartGame()">Play Again</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── DICTIONARY (1000 common words) ──────────────────────────────────────────
+const WORDS = new Set(`AA AB AD AE AG AH AI AL AM AN AR AS AT AW AX AY
+BA BE BI BO BY
+DA DE DO
+EA ED EF EH EL EM EN ER ES ET EW EX
+FA FE
+GI GO
+HA HE HI HM HO
+ID IF IN IS IT
+JO
+KA KI
+LA LI LO
+MA ME MI MM MO MU MY
+NA NE NO NU
+OD OE OF OH OI OM ON OP OR OS OW OX OY
+PA PE PI PO
+QI
+RE
+SH SI SO
+TA TI TO
+UH UM UN UP UT
+WE WO
+XI XU
+YA YE YO
+ZA
+ACE ACT ADD ADO AGE AGO AID AIM AIR ALL AND ANT ANY APE APT ARC ARE ARK ARM ART ASH ASK ASS ATE AXE
+BAD BAG BAN BAR BAS BAT BAY BED BIG BIT BOG BOX BOY BUD BUG BUN BUS BUT BUY
+CAB CAM CAN CAP CAR CAT CAW COP COT COW CRY CUB CUD CUP CUR CUT
+DAB DAD DAM DAY DEN DEW DID DIG DIM DIP DOC DOE DOG DOT DRY DUB DUG DUO
+EAR EAT EEL EGG EGO ELK ELM EMU END ERA
+FAD FAN FAR FAT FAX FAY FED FEW FIG FIN FIT FIX FLY FOB FOE FOG FOP FOR FOX FRY FUB FUR
+GAB GAG GAP GAS GAY GEL GEM GET GIG GIN GNU GOB GOD GOT GUM GUN GUT GUY
+HAD HAM HAS HAT HAW HAY HER HEW HID HIM HIP HIT HOB HOD HOG HOP HOT HOW HUB HUG HUM HUT
+ICE ILL INN IRS ITS IVY
+JAB JAG JAM JAR JAW JAY JET JIG JOB JOG JOT JOY JUG
+KEG KID KIT
+LAB LAD LAP LAW LAX LAY LEA LED LEG LET LID LIP LIT LOG LOT LOW LUG
+MAD MAN MAP MAR MAT MAW MAY MEN MET MOB MOD MOM MOP MOW MUD MUG
+NAB NAG NAP NET NEW NIB NIT NOD NOR NOT NOW NUB NUN NUT
+OAK OAR OAT ODD OIL OLD OPT ORB ORE OUR OUT OWE OWL OWN
+PAD PAL PAN PAP PAR PAT PAW PAY PEA PEG PEP PET PIE PIG PIN PIT PLY POD POP POT POW PRY PUB PUG PUN PUP PUS PUT
+RAG RAM RAN RAP RAT RAW RAY RED REF RID RIG RIM RIP ROB ROD ROE ROT ROW RUB RUG RUN RUT RYE
+SAC SAD SAG SAP SAT SAW SAY SEA SET SEW SHE SHY SIP SIR SIT SKI SKY SLY SOB SOD SOT SOW SOY SPA SPY STY SUB SUM SUN SUP
+TAB TAD TAN TAP TAR TAX TEN THE TIE TIN TIP TOE TON TOO TOP TOW TOY TUB TUG TUN TWO
+URN USE
+VAN VET VIA VIE VOW
+WAD WAR WAS WAX WAY WEB WED WIG WIN WIT WIZ WOE WOK WON WOO
+YAK YAM YAP YEW
+ZAP ZED ZIT
+ABLE ACHE ACID ACRE AGED AGES AGIO AGUE AIDE AIDS AIMS AIRS AIRY AISLES AKIN ALMS ALSO ALUM AMID AMPS AMOK AMPS ANEW ANTE ANTI APEX ARCS AREA ARCH ARES ARMS ARMY ARTY ATOM AVID AVOW AWED AWRY AXLE
+BABY BACK BALD BALL BANE BANG BANK BARE BARK BARN BARS BASH BASK BAST BATH BATS BAUD BAWL BEAD BEAM BEAN BEAR BEAT BEEN BEER BEES BELT BEND BENT BERM BEST BIAS BIBS BIDS BILL BIND BIRD BITE BITS BLED BLOW BLUE BLUR BOAR BOAT BOBS BODE BOGS BOLD BOLT BOMB BOND BONE BONY BOOK BOOM BOOT BORE BOTH BOUT BOWL BRAE BRAG BRAN BRAT BRAW BRED BREW BRIG BROW BUGS BULK BULL BUMP BUNK BUNT BUOY BURN BURP BURR BURY BUST BUSY BYTE
+CAFE CAGE CAKE CALL CALM CAME CAMS CANE CARE CART CASE CASH CAST CAVE CENT CHAD CHAR CHAP CHIP CHOP CHOW CLAD CLAM CLAP CLAY CLOD CLOG CLOP CLOT CLOY CLUB CLUE COAL COAT COAX COIL COIN COLA COLD COLT COME CONE COOK COOL COPE CORD CORE CORN COZY CRAB CRAM CRAW CREW CROP CROW CUBE CUFF CUPS CURL CURT CUTE CYAN
+DABS DAMP DARE DARK DARN DART DASH DATA DATE DAWN DAZE DEAD DEAF DEAL DEAR DEBT DECK DEED DEEP DEFT DENS DENT DESK DICE DILL DIME DIMS DINE DIRE DIRT DISC DISH DISK DIVE DOCK DODO DOLL DOME DONE DOOM DOPE DOSE DOST DOTE DOVE DOWN DRAB DRAG DRAW DREW DRIP DROP DRUG DRUM DUCK DUDE DULL DUMB DUMP DUNE DUNG DUNK DUSK DUST DUTY
+EACH EARN EASE EDGE EMIT ENVY EPIC EVEN EXAM EXES EYES
+FACE FACT FADE FAIL FAIN FAIR FAME FANG FARE FARM FAST FATE FAUN FAWN FAZE FEAT FEED FEEL FEET FELL FELT FERN FETE FEUD FIFE FILL FILM FIND FINE FIRE FIRM FISH FIST FIVE FLAG FLAK FLAT FLAW FLEA FLED FLEX FLIT FLOG FLOP FLOW FOAM FOLD FOLK FOND FONT FORD FORE FORK FORM FORT FOUL FOUR FREE FRET FROG FROM FUEL FULL FUND FUSE FUSS FUZZ
+GALE GALS GAME GAPE GARB GASH GAZE GEAR GERM GILD GILT GIST GIVE GLAD GLEE GLEN GLIB GLOW GLUE GLUM GNAW GOAD GOBS GODS GOLD GOLF GONE GONG GOOD GORY GOSH GOWN GRAB GRAD GRAM GRAPG GRAY GREW GRID GRIN GRIP GRIT GRUB GRUEL GULF GULL GULP GUSH GUST GUYS
+HALE HALF HALL HALO HALT HAND HANG HARD HARE HARK HARM HARP HASH HATE HAUL HAUL HAVE HAWK HEAL HEAP HEAT HEEL HEED HELM HELP HEMP HERB HIGH HIKE HILL HILT HINT HIRE HIVE HOAX HONE HOOD HOOK HOOP HORN HOSE HOST HOUR HOWL HULK HULL HUMP HUNG HUNK HUNT HURL HURT HUSK
+IBIS ICON IDEA IDLE IKON ILLS IMAM INCA INCH INKY IONS IRIS ISLE ITCH
+JADE JAIL JAPE JEST JIBE JILT JOLT JUMP JUST
+KEEN KEEP KELP KEPT KILT KING KINK KNOB KNOT KNOW
+LACE LACK LAIR LAKE LAME LAMP LAND LANE LANK LARD LARK LASH LASS LAST LATE LAUD LAVA LAWN LAZY LEAD LEAF LEAN LEAP LEER LEFT LEND LENS LENT LEVY LIME LIMB LIMO LIMP LINE LINK LINT LION LIST LIVE LOAD LOAM LOAN LOBE LOCK LOFT LONE LONG LOON LOOP LOOT LORE LORN LOSS LOST LOUT LOVE LUCK LURE LURK LUSH LUST LUTE
+MADE MAID MAIL MAIN MAKE MALE MALL MANE MANY MARK MARE MARS MASH MASK MAST MATE MAZE MEAD MEAL MEAT MELT MEMO MERE MESH METE MICE MILD MILE MILK MILL MILT MIME MIND MINE MINK MINT MISS MIST MOAN MOAT MOCK MOLD MOLE MOLT MONK MOON MOOR MORE MOSS MOST MOTE MUCH MULE MUTT
+NAIL NAME NAPE NARK NAVE NAVY NEAR NEAT NECK NEED NEST NICK NONE NOOK NOON NORM NOSE NOTE NOUN NUMB NUTS
+OATH OBOE ODDS OMEN ONCE ONLY OPAL OPEN OPUS OVER OVEN OWED OWES OWNS
+PACE PACK PACT PAGE PAID PAIL PAIN PAIR PALE PALL PALM PANG PARK PART PASS PAST PATH PAVE PAWN PEAK PEEL PEEN PEEL PEER PELT PEST PICA PICK PIER PIKE PILE PILL PINE PING PINK PIPE PITH PITY PLAN PLAT PLAY PLEA PLOD PLOT PLOY PLUG PLUM PLUS POEM POET POKE PONY POOL POOR POPE PORE PORK POSE POST POUT PRAY PREP PREY PRIM PROD PROM PROP PROS PROW PUNY PURE PUSH PUTT
+QUAD QUIT QUIZ QUOD
+RACE RACK RAFT RAGE RAGA RAID RAIL RAIN RAKE RAMP RANT RASP RATE RAVE RAYS REAM REAP RECK REEL REEF RELY RENT REPO REST RICE RICH RIDE RIFLE RIFT RING RIOT RISE RISK RITE ROAD ROAM ROAR ROBE ROCK ROLE ROLL ROMP ROOF ROOK ROOM ROPE ROSE ROTE ROVE RUDE RUIN RULE RUMP RUNE RUNG RUSH RUSE RUST RYES
+SACK SAFE SAGE SAIL SAKE SALE SALT SAME SAND SANE SANG SANK SASH SAVE SCAM SCAN SCAR SCUD SEAL SEAM SEAR SEEN SEEP SELF SELL SENTRY SERB SHED SHIM SHIN SHIP SHOE SHOP SHOT SHOW SHUN SICK SIFT SIGN SILK SILL SILO SILT SING SINK SIREN SITE SKEW SKIN SKIP SLAM SLAP SLED SLIM SLIP SLIT SLOB SLOP SLOT SLOW SLUG SLUM SLUR SOAK SOBS SOCK SOFT SOIL SOLD SOLE SOLO SOMA SOME SONG SOOT SORT SOUL SOUP SOUR SPAN SPAR SPED SPIN SPIT SPOT SPUD SPUR STAB STAG STAR STAY STEP STEW STIR STOP STUB STUN SUIT SULK SUNG SUNK SURE SWAB SWAM SWAN SWAT SWAY SWIM SWUM SWUNG
+TACK TALE TALL TAME TAMP TANG TAPE TARE TARP TAUT TEAK TEAL TEAM TEAR TEEM TEEN TELL TEMP TEND TENT TERSE TEST THAT THAW THEM THEN THEY THUD THUS TIDE TIER TIFF TILE TILL TIME TINT TIRE TOAD TOLL TOME TONG TOOL TOOT TORN TOSS TOUR TROD TROT TROY TRUE TUCK TUFT TUMP TUNE TURF TUSK TWIG TWIN TYPE
+UGLY UNDO UNIT UPON URCHIN URGE
+VALE VANE VANS VAST VEIL VEIN VENT VERB VEST VIBE VICE VILE VINE VISA VISE VOID VOLE VOLT VOTE VOWS
+WADE WAFT WAGE WAIL WAIF WAKE WALK WALL WAND WANT WARD WARM WARP WART WARY WASH WASP WAVE WAVY WEAL WEAN WEED WEEP WELL WELT WENT WEPT WERE WEST WHAM WHAT WHEN WHIM WHIP WHIR WHIT WHOM WIGS WILD WILL WILT WIND WINE WING WINK WIRE WISH WITH WITS WOLF WOMB WONT WOOD WOOF WOOS WORD WORE WORK WORM WORN WORT WRAP WREN WRIT WOKE
+YELL YOGA YOUR YUAN YULE
+ZEAL ZERO ZINC ZONE ZOOM ZYME`.split(/\s+/).filter(Boolean));
+
+// ─── TILE BAG ─────────────────────────────────────────────────────────────────
+const TILE_DATA = {
+  A:{count:9,pts:1}, B:{count:2,pts:3}, C:{count:2,pts:3}, D:{count:4,pts:2},
+  E:{count:12,pts:1}, F:{count:2,pts:4}, G:{count:3,pts:2}, H:{count:2,pts:4},
+  I:{count:9,pts:1}, J:{count:1,pts:8}, K:{count:1,pts:5}, L:{count:4,pts:1},
+  M:{count:2,pts:3}, N:{count:6,pts:1}, O:{count:8,pts:1}, P:{count:2,pts:3},
+  Q:{count:1,pts:10}, R:{count:6,pts:1}, S:{count:4,pts:1}, T:{count:6,pts:1},
+  U:{count:4,pts:1}, V:{count:2,pts:4}, W:{count:2,pts:4}, X:{count:1,pts:8},
+  Y:{count:2,pts:4}, Z:{count:1,pts:10}, _:{count:2,pts:0}
+};
+
+function buildBag() {
+  const bag = [];
+  for (const [letter, {count, pts}] of Object.entries(TILE_DATA)) {
+    for (let i = 0; i < count; i++) bag.push({letter, pts, isBlank: letter==='_'});
+  }
+  return shuffle(bag);
+}
+
+function shuffle(arr) {
+  for (let i = arr.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+
+// ─── BOARD BONUS SQUARES ─────────────────────────────────────────────────────
+function getBonusType(r, c) {
+  const TWS = [[0,0],[0,7],[0,14],[7,0],[7,14],[14,0],[14,7],[14,14]];
+  const DWS = [[1,1],[1,13],[2,2],[2,12],[3,3],[3,11],[4,4],[4,10],[7,7],
+               [10,4],[10,10],[11,3],[11,11],[12,2],[12,12],[13,1],[13,13]];
+  const TLS = [[1,5],[1,9],[5,1],[5,5],[5,9],[5,13],[9,1],[9,5],[9,9],[9,13],[13,5],[13,9]];
+  const DLS = [[0,3],[0,11],[2,6],[2,8],[3,0],[3,7],[3,14],[6,2],[6,6],[6,8],[6,12],
+               [7,3],[7,11],[8,2],[8,6],[8,8],[8,12],[11,0],[11,7],[11,14],[12,6],[12,8],
+               [14,3],[14,11]];
+
+  if (TWS.some(([a,b])=>a===r&&b===c)) return 'tws';
+  if (DWS.some(([a,b])=>a===r&&b===c)) return 'dws';
+  if (TLS.some(([a,b])=>a===r&&b===c)) return 'tls';
+  if (DLS.some(([a,b])=>a===r&&b===c)) return 'dls';
+  if (r===7&&c===7) return 'center';
+  return null;
+}
+
+const BONUS_LABEL = {tws:'3W', dws:'2W', tls:'3L', dls:'2L', center:'★'};
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let settings = {mode:'vsAI', diff:'medium'};
+let G = {};
+
+function initGame() {
+  const bag = buildBag();
+  G = {
+    bag,
+    board: Array(15).fill(null).map(()=>Array(15).fill(null)),
+    players: [
+      {name:'You',    score:0, rack:[], isHuman:true},
+      {name: settings.mode==='vs2P' ? 'Player 2' : 'AI', score:0, rack:[], isHuman: settings.mode==='vs2P'}
+    ],
+    current: 0,
+    placed: [],      // [{r,c,tile}] — tiles placed this turn (not yet committed)
+    selectedRackIdx: null,
+    consecutivePasses: 0,
+    gameOver: false
+  };
+  drawTiles(0, 7);
+  drawTiles(1, 7);
+}
+
+function drawTiles(playerIdx, count) {
+  const p = G.players[playerIdx];
+  while (p.rack.length < 7 && G.bag.length > 0) {
+    p.rack.push(G.bag.pop());
+  }
+}
+
+// ─── BOARD LOGIC ─────────────────────────────────────────────────────────────
+function boardIsEmpty() {
+  return !G.board.some(row => row.some(c=>c));
+}
+
+function getPlacedWord() {
+  if (!G.placed.length) return null;
+  const rows = G.placed.map(p=>p.r);
+  const cols = G.placed.map(p=>p.c);
+  const minR = Math.min(...rows), maxR = Math.max(...rows);
+  const minC = Math.min(...cols), maxC = Math.max(...cols);
+
+  let horizontal = rows.every(r=>r===rows[0]);
+  let vertical   = cols.every(c=>c===cols[0]);
+  if (!horizontal && !vertical) return null;
+
+  // Expand to full word on board
+  if (horizontal) {
+    let c = minC;
+    while (c > 0 && (G.board[rows[0]][c-1] || G.placed.find(p=>p.r===rows[0]&&p.c===c-1))) c--;
+    let word = '', tiles = [];
+    while (c <= 14) {
+      const locked = G.board[rows[0]][c];
+      const preview = G.placed.find(p=>p.r===rows[0]&&p.c===c);
+      if (locked) { word += locked.letter; tiles.push({r:rows[0],c,tile:locked,isNew:false}); }
+      else if (preview) { word += preview.tile.displayLetter||preview.tile.letter; tiles.push({r:rows[0],c,tile:preview.tile,isNew:true}); }
+      else break;
+      c++;
+    }
+    return {word, tiles, dir:'H'};
+  } else {
+    let r = minR;
+    while (r > 0 && (G.board[r-1][cols[0]] || G.placed.find(p=>p.c===cols[0]&&p.r===r-1))) r--;
+    let word = '', tiles = [];
+    while (r <= 14) {
+      const locked = G.board[r][cols[0]];
+      const preview = G.placed.find(p=>p.c===cols[0]&&p.r===r);
+      if (locked) { word += locked.letter; tiles.push({r,c:cols[0],tile:locked,isNew:false}); }
+      else if (preview) { word += preview.tile.displayLetter||preview.tile.letter; tiles.push({r,c:cols[0],tile:preview.tile,isNew:true}); }
+      else break;
+      r++;
+    }
+    return {word, tiles, dir:'V'};
+  }
+}
+
+function getCrossWords(mainDir) {
+  const crossWords = [];
+  for (const {r, c, tile} of G.placed) {
+    const crossDir = mainDir === 'H' ? 'V' : 'H';
+    let word = '';
+    const tiles = [];
+    if (crossDir === 'V') {
+      let rr = r;
+      while (rr > 0 && (G.board[rr-1][c])) rr--;
+      while (rr <= 14) {
+        const t = G.board[rr][c] || (rr===r?tile:null);
+        if (!t) break;
+        word += t.displayLetter || t.letter;
+        tiles.push({r:rr,c,tile:t,isNew:rr===r});
+        rr++;
+      }
+    } else {
+      let cc = c;
+      while (cc > 0 && (G.board[r][cc-1])) cc--;
+      while (cc <= 14) {
+        const t = G.board[r][cc] || (cc===c?tile:null);
+        if (!t) break;
+        word += t.displayLetter || t.letter;
+        tiles.push({r,c:cc,tile:t,isNew:cc===c});
+        cc++;
+      }
+    }
+    if (word.length > 1) crossWords.push({word, tiles});
+  }
+  return crossWords;
+}
+
+function validatePlacement() {
+  if (!G.placed.length) return {ok:false, msg:'No tiles placed'};
+
+  const empty = boardIsEmpty();
+  if (empty) {
+    if (!G.placed.some(p=>p.r===7&&p.c===7)) return {ok:false, msg:'First word must cover center ★'};
+    if (G.placed.length < 2) return {ok:false, msg:'First word must be 2+ letters'};
+  } else {
+    // Must connect to existing tiles
+    const connects = G.placed.some(({r,c}) =>
+      [[r-1,c],[r+1,c],[r,c-1],[r,c+1]].some(([nr,nc])=>nr>=0&&nr<15&&nc>=0&&nc<15&&G.board[nr][nc])
+    );
+    if (!connects) return {ok:false, msg:'Word must connect to existing tiles'};
+  }
+
+  const main = getPlacedWord();
+  if (!main) return {ok:false, msg:'Tiles must be in a straight line'};
+
+  // Check for gaps
+  const rows = G.placed.map(p=>p.r), cols = G.placed.map(p=>p.c);
+  if (main.dir==='H') {
+    const r = rows[0];
+    for (let c = Math.min(...cols); c <= Math.max(...cols); c++) {
+      if (!G.board[r][c] && !G.placed.find(p=>p.r===r&&p.c===c)) return {ok:false,msg:'No gaps allowed'};
+    }
+  } else {
+    const c = cols[0];
+    for (let r = Math.min(...rows); r <= Math.max(...rows); r++) {
+      if (!G.board[r][c] && !G.placed.find(p=>p.r===r&&p.c===c)) return {ok:false,msg:'No gaps allowed'};
+    }
+  }
+
+  return {ok:true, main};
+}
+
+function scoreWord(tiles) {
+  let letterScore = 0, wordMult = 1;
+  let isFirstPlay = boardIsEmpty();
+  for (const {r, c, tile, isNew} of tiles) {
+    const pts = tile.pts;
+    if (isNew) {
+      const bonus = getBonusType(r, c);
+      if (bonus === 'tls') letterScore += pts * 3;
+      else if (bonus === 'dls') letterScore += pts * 2;
+      else letterScore += pts;
+      if (bonus === 'tws') wordMult *= 3;
+      else if (bonus === 'dws' || bonus === 'center') wordMult *= 2;
+    } else {
+      letterScore += pts;
+    }
+  }
+  return letterScore * wordMult;
+}
+
+// ─── ACTIONS ──────────────────────────────────────────────────────────────────
+function submitWord() {
+  const {ok, msg, main} = validatePlacement();
+  if (!ok) { showToast(msg); return; }
+
+  const allWords = [main, ...getCrossWords(main.dir)];
+  const invalid = allWords.find(w => w.word.length > 1 && !WORDS.has(w.word.toUpperCase()));
+  if (invalid) { showToast(`"${invalid.word}" is not a valid word`); return; }
+
+  let totalScore = 0;
+  for (const w of allWords) {
+    if (w.word.length > 1) totalScore += scoreWord(w.tiles);
+  }
+
+  // Bingo bonus
+  if (G.placed.length === 7) { totalScore += 50; showToast(`BINGO! +50 bonus!`); }
+
+  // Commit tiles
+  for (const {r, c, tile} of G.placed) G.board[r][c] = tile;
+
+  G.players[G.current].score += totalScore;
+  if (!document.querySelector('#toast.show'))
+    showToast(`"${main.word}" — +${totalScore} pts! (${allWords.filter(w=>w.word.length>1).map(w=>w.word).join(', ')})`);
+
+  G.placed = [];
+  G.selectedRackIdx = null;
+  G.consecutivePasses = 0;
+
+  drawTiles(G.current, 7);
+  checkGameEnd();
+  if (!G.gameOver) nextTurn();
+}
+
+function passTurn() {
+  clearPlaced();
+  G.consecutivePasses++;
+  if (G.consecutivePasses >= G.players.length * 2) {
+    endGame();
+    return;
+  }
+  nextTurn();
+}
+
+function exchangeTiles() {
+  if (G.bag.length < 7) { showToast('Not enough tiles in bag to exchange'); return; }
+  const p = G.players[G.current];
+  clearPlaced();
+  // Put rack back and redraw
+  for (const t of p.rack) G.bag.unshift(t);
+  p.rack = [];
+  shuffle(G.bag);
+  drawTiles(G.current, 7);
+  G.consecutivePasses++;
+  nextTurn();
+}
+
+function clearPlaced() {
+  const p = G.players[G.current];
+  for (const {r, c, tile, rackIdx} of G.placed) {
+    p.rack.splice(rackIdx, 0, tile);
+  }
+  G.placed = [];
+  G.selectedRackIdx = null;
+}
+
+function shuffleRack() {
+  shuffle(G.players[G.current].rack);
+  renderRack();
+}
+
+function nextTurn() {
+  G.current = 1 - G.current;
+  renderAll();
+  const p = G.players[G.current];
+  if (!p.isHuman && !G.gameOver) {
+    setTimeout(doAITurn, 600);
+  }
+}
+
+function checkGameEnd() {
+  const p = G.players[G.current];
+  if (p.rack.length === 0 && G.bag.length === 0) {
+    endGame();
+  }
+}
+
+function endGame() {
+  G.gameOver = true;
+  // Subtract remaining rack values
+  for (const p of G.players) {
+    const penalty = p.rack.reduce((s,t)=>s+t.pts,0);
+    p.score = Math.max(0, p.score - penalty);
+  }
+  const winner = G.players[0].score >= G.players[1].score ? G.players[0] : G.players[1];
+  const draw = G.players[0].score === G.players[1].score;
+  showOverlay(
+    draw ? '🤝' : (winner.isHuman ? '🏆' : '😢'),
+    draw ? "It's a Draw!" : `${winner.name} Wins!`,
+    `Scores — You: ${G.players[0].score} | ${G.players[1].name}: ${G.players[1].score}`
+  );
+}
+
+// ─── AI ───────────────────────────────────────────────────────────────────────
+function doAITurn() {
+  const ai = G.players[1];
+  if (ai.rack.length === 0) { passTurn(); return; }
+
+  const diff = settings.diff;
+  if (diff === 'easy') {
+    // Random valid single-word placement or pass
+    const move = findSimpleAIMove(ai.rack, 1);
+    if (move) executeAIMove(move, ai);
+    else passTurn();
+  } else if (diff === 'medium') {
+    const move = findSimpleAIMove(ai.rack, 2) || findSimpleAIMove(ai.rack, 1);
+    if (move) executeAIMove(move, ai);
+    else passTurn();
+  } else {
+    const move = findBestAIMove(ai.rack);
+    if (move) executeAIMove(move, ai);
+    else passTurn();
+  }
+}
+
+function findSimpleAIMove(rack, minLen) {
+  // Try all words from dictionary that fit in the rack (ignoring board connection for simplicity on first move)
+  const letters = rack.map(t => t.isBlank ? '_' : t.letter);
+  const candidates = [];
+  for (const word of WORDS) {
+    if (word.length < minLen || word.length > 7) continue;
+    if (canSpellWithRack(word, letters)) {
+      candidates.push(word);
+    }
+  }
+  if (!candidates.length) return null;
+  // Pick a random one, place horizontally
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const word = candidates[Math.floor(Math.random()*candidates.length)];
+    if (boardIsEmpty()) {
+      return {word, r:7, c:7-Math.floor(word.length/2), dir:'H'};
+    }
+    // Find a spot on the board
+    const placement = findBoardPlacement(word);
+    if (placement) return placement;
+  }
+  return null;
+}
+
+function findBestAIMove(rack) {
+  const letters = rack.map(t => t.isBlank ? '_' : t.letter);
+  let bestMove = null, bestScore = 0;
+
+  const wordList = [...WORDS].filter(w => w.length >= 2 && w.length <= 7 && canSpellWithRack(w, letters));
+  const sample = wordList.sort(()=>Math.random()-.5).slice(0, 80); // sample for performance
+
+  for (const word of sample) {
+    if (boardIsEmpty()) {
+      const move = {word, r:7, c:7-Math.floor(word.length/2), dir:'H'};
+      const score = estimateMoveScore(move);
+      if (score > bestScore) { bestScore = score; bestMove = move; }
+    } else {
+      const placement = findBoardPlacement(word);
+      if (placement) {
+        const score = estimateMoveScore(placement);
+        if (score > bestScore) { bestScore = score; bestMove = placement; }
+      }
+    }
+  }
+  return bestMove;
+}
+
+function canSpellWithRack(word, rackLetters) {
+  const avail = [...rackLetters];
+  for (const ch of word) {
+    const idx = avail.indexOf(ch);
+    if (idx >= 0) { avail.splice(idx, 1); continue; }
+    const blank = avail.indexOf('_');
+    if (blank >= 0) { avail.splice(blank, 1); continue; }
+    return false;
+  }
+  return true;
+}
+
+function findBoardPlacement(word) {
+  // Look for a letter in the word that matches a board cell
+  for (let r = 0; r < 15; r++) {
+    for (let c = 0; c < 15; c++) {
+      const cell = G.board[r][c];
+      if (!cell) continue;
+      const letter = cell.displayLetter || cell.letter;
+      const wi = word.indexOf(letter);
+      if (wi < 0) continue;
+      // Try horizontal placement
+      const startC = c - wi;
+      if (startC >= 0 && startC + word.length <= 15) {
+        if (fitsHorizontal(word, r, startC)) return {word, r, c:startC, dir:'H'};
+      }
+      // Try vertical
+      const startR = r - wi;
+      if (startR >= 0 && startR + word.length <= 15) {
+        if (fitsVertical(word, startR, c)) return {word, r:startR, c, dir:'V'};
+      }
+    }
+  }
+  return null;
+}
+
+function fitsHorizontal(word, r, startC) {
+  for (let i = 0; i < word.length; i++) {
+    const cell = G.board[r][startC+i];
+    if (cell && (cell.displayLetter || cell.letter) !== word[i]) return false;
+  }
+  return true;
+}
+
+function fitsVertical(word, startR, c) {
+  for (let i = 0; i < word.length; i++) {
+    const cell = G.board[startR+i][c];
+    if (cell && (cell.displayLetter || cell.letter) !== word[i]) return false;
+  }
+  return true;
+}
+
+function estimateMoveScore(move) {
+  let s = 0;
+  for (const ch of move.word) s += (TILE_DATA[ch]||{pts:0}).pts;
+  return s;
+}
+
+function executeAIMove(move, ai) {
+  const {word, r, c, dir} = move;
+  let rIdx = 0;
+
+  for (let i = 0; i < word.length; i++) {
+    const row = dir==='H' ? r : r+i;
+    const col = dir==='H' ? c+i : c;
+    if (G.board[row][col]) continue; // already placed
+
+    const ch = word[i];
+    let tileIdx = ai.rack.findIndex(t => !t.isBlank && t.letter === ch);
+    if (tileIdx < 0) tileIdx = ai.rack.findIndex(t => t.isBlank);
+    if (tileIdx < 0) return;
+
+    const tile = ai.rack.splice(tileIdx, 1)[0];
+    if (tile.isBlank) { tile.displayLetter = ch; tile.pts = 0; }
+    G.board[row][col] = tile;
+  }
+
+  // Score simply
+  let score = 0;
+  for (const ch of word) score += (TILE_DATA[ch]||{pts:1}).pts;
+  ai.score += score;
+
+  drawTiles(1, 7);
+  showToast(`${ai.name} played "${word}" (+${score} pts)`);
+  G.consecutivePasses = 0;
+  checkGameEnd();
+  if (!G.gameOver) {
+    G.current = 0;
+    renderAll();
+  }
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function renderBoard() {
+  const div = document.getElementById('boardDiv');
+  div.innerHTML = '';
+  for (let r = 0; r < 15; r++) {
+    for (let c = 0; c < 15; c++) {
+      const cell = document.createElement('div');
+      const bonus = getBonusType(r,c);
+      const locked = G.board[r][c];
+      const preview = G.placed.find(p=>p.r===r&&p.c===c);
+
+      if (locked) {
+        cell.className = 'cell locked';
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        tile.textContent = locked.displayLetter || locked.letter;
+        const pts = document.createElement('span');
+        pts.className = 'pts';
+        pts.textContent = locked.pts;
+        tile.appendChild(pts);
+        cell.appendChild(tile);
+      } else if (preview) {
+        cell.className = 'cell preview';
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        tile.textContent = preview.tile.displayLetter || preview.tile.letter;
+        tile.onclick = () => recallTile(r, c);
+        cell.appendChild(tile);
+      } else {
+        cell.className = `cell ${bonus||'empty'}`;
+        if (bonus) cell.textContent = BONUS_LABEL[bonus];
+        cell.onclick = () => placeOnBoard(r, c);
+      }
+      div.appendChild(cell);
+    }
+  }
+}
+
+function renderRack() {
+  const div = document.getElementById('rackDiv');
+  div.innerHTML = '';
+  const p = G.players[G.current];
+  if (!p.isHuman) { div.innerHTML = '<span style="color:var(--subtext);font-weight:700;font-size:12px">AI is thinking...</span>'; return; }
+
+  p.rack.forEach((tile, idx) => {
+    const el = document.createElement('div');
+    el.className = `rack-tile${tile.isBlank?' blank-tile':''}${idx===G.selectedRackIdx?' selected':''}`;
+    el.textContent = tile.isBlank ? (tile.displayLetter||'?') : tile.letter;
+    const pts = document.createElement('span');
+    pts.className = 'pts';
+    pts.textContent = tile.pts;
+    el.appendChild(pts);
+    el.onclick = () => selectRackTile(idx);
+    div.appendChild(el);
+  });
+}
+
+function renderScores() {
+  const strip = document.getElementById('scoreStrip');
+  strip.innerHTML = '';
+  G.players.forEach((p, i) => {
+    const box = document.createElement('div');
+    box.className = `score-box${i===G.current?' active':''}`;
+    box.innerHTML = `<div class="sb-name">${p.name}</div><div class="sb-score">${p.score}</div>`;
+    strip.appendChild(box);
+  });
+  document.getElementById('tilesLeft').textContent = G.bag.length;
+  const p = G.players[G.current];
+  document.getElementById('rackLabel').textContent =
+    p.isHuman ? `YOUR TILES (${p.rack.length})` : `${p.name}'s turn`;
+}
+
+function renderAll() {
+  renderBoard();
+  renderRack();
+  renderScores();
+}
+
+// ─── TILE PLACEMENT ───────────────────────────────────────────────────────────
+function selectRackTile(idx) {
+  const p = G.players[G.current];
+  if (!p.isHuman) return;
+  G.selectedRackIdx = G.selectedRackIdx === idx ? null : idx;
+  renderRack();
+}
+
+function placeOnBoard(r, c) {
+  const p = G.players[G.current];
+  if (!p.isHuman || G.selectedRackIdx === null) return;
+  if (G.board[r][c] || G.placed.find(x=>x.r===r&&x.c===c)) return;
+
+  const tile = {...p.rack[G.selectedRackIdx]};
+  const rackIdx = G.selectedRackIdx;
+
+  if (tile.isBlank && !tile.displayLetter) {
+    pendingBlank = {r, c, rackIdx};
+    document.getElementById('blankInput').value = '';
+    document.getElementById('blankDialog').style.display = 'flex';
+    return;
+  }
+
+  p.rack.splice(rackIdx, 1);
+  G.placed.push({r, c, tile, rackIdx});
+  G.selectedRackIdx = null;
+  renderAll();
+}
+
+let pendingBlank = null;
+function confirmBlank() {
+  const letter = document.getElementById('blankInput').value.toUpperCase().replace(/[^A-Z]/,'');
+  if (!letter) return;
+  document.getElementById('blankDialog').style.display = 'none';
+
+  const p = G.players[G.current];
+  const {r, c, rackIdx} = pendingBlank;
+  const tile = {...p.rack[rackIdx], displayLetter: letter, pts: 0};
+  p.rack.splice(rackIdx, 1);
+  G.placed.push({r, c, tile, rackIdx});
+  G.selectedRackIdx = null;
+  pendingBlank = null;
+  renderAll();
+}
+
+function recallTile(r, c) {
+  const idx = G.placed.findIndex(x=>x.r===r&&x.c===c);
+  if (idx < 0) return;
+  const {tile, rackIdx} = G.placed.splice(idx, 1)[0];
+  tile.displayLetter = tile.isBlank ? undefined : tile.displayLetter;
+  G.players[G.current].rack.splice(rackIdx, 0, tile);
+  renderAll();
+}
+
+// ─── UI ───────────────────────────────────────────────────────────────────────
+function startGame() {
+  settings.mode = document.querySelector('[data-group="mode"].active').dataset.val;
+  settings.diff = document.querySelector('[data-group="diff"].active').dataset.val;
+  document.getElementById('modeBadge').textContent =
+    settings.mode === 'vs2P' ? '2P' : `VS AI (${settings.diff})`;
+  initGame();
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('gameScreen').style.display  = 'flex';
+  document.getElementById('pp-back').style.display = 'none';
+  document.getElementById('pause-btn').style.display = 'flex';
+  renderAll();
+}
+
+function restartGame() {
+  document.getElementById('overlay').style.display = 'none';
+  initGame();
+  renderAll();
+}
+
+function showOverlay(emoji, title, msg) {
+  document.getElementById('overlayEmoji').textContent = emoji;
+  document.getElementById('overlayTitle').textContent = title;
+  document.getElementById('overlayMsg').textContent   = msg;
+  document.getElementById('overlay').style.display = 'flex';
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+document.querySelectorAll('.toggle-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll(`[data-group="${btn.dataset.group}"]`).forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+</script>
+
+<div id="pause-overlay" style="display:none;position:fixed;inset:0;background:rgba(5,5,15,0.92);flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:50000;">
+  <div style="font-family:'Lilita One',Arial,sans-serif;font-size:34px;color:#00d4ff;letter-spacing:4px;text-shadow:0 0 20px rgba(0,212,255,0.6);">PAUSED</div>
+  <button id="pause-resume-btn" style="font-family:'Lilita One',Arial,sans-serif;font-size:17px;padding:13px 0;width:220px;background:#3DC46A;color:#1D284A;border:3px solid #1D284A;border-radius:14px;box-shadow:3px 3px 0 #1D284A;cursor:pointer;-webkit-tap-highlight-color:transparent;box-sizing:border-box;">▶ RESUME</button>
+  <button id="pause-restart-btn" style="font-family:'Lilita One',Arial,sans-serif;font-size:17px;padding:13px 0;width:220px;background:#2A3660;color:#fff;border:3px solid #1D284A;border-radius:14px;box-shadow:3px 3px 0 #1D284A;cursor:pointer;-webkit-tap-highlight-color:transparent;box-sizing:border-box;">↺ RESTART</button>
+  <button id="pause-title-btn" style="font-family:'Lilita One',Arial,sans-serif;font-size:17px;padding:13px 0;width:220px;background:#2A3660;color:#fff;border:3px solid #1D284A;border-radius:14px;box-shadow:3px 3px 0 #1D284A;cursor:pointer;-webkit-tap-highlight-color:transparent;box-sizing:border-box;">☰ TITLE SCREEN</button>
+  <a href="../index.html" style="font-family:'Lilita One',Arial,sans-serif;font-size:17px;background:#2A3660;color:#ffffff;border:3px solid #1D284A;border-radius:14px;padding:13px 0;width:220px;cursor:pointer;box-shadow:3px 3px 0 #1D284A;-webkit-tap-highlight-color:transparent;display:block;text-decoration:none;text-align:center;box-sizing:border-box;">← PixelPlay</a>
+</div>
+<button id="pause-btn" style="position:fixed;top:14px;right:14px;z-index:50001;width:40px;height:40px;background:rgba(42,54,96,0.85);color:#fff;font-size:18px;border:2px solid rgba(255,255,255,0.25);border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.4);-webkit-tap-highlight-color:transparent;touch-action:manipulation;">⏸</button>
+
+<script>
+let isPaused = false;
+function togglePause() {
+  isPaused = !isPaused;
+  document.getElementById('pause-overlay').style.display = isPaused ? 'flex' : 'none';
+  document.getElementById('pause-btn').style.display = isPaused ? 'none' : 'flex';
+}
+function goToTitleScreen() {
+  isPaused = false;
+  document.getElementById('pause-overlay').style.display = 'none';
+  document.getElementById('overlay').style.display = 'none';
+  document.getElementById('pause-btn').style.display = 'none';
+  document.getElementById('pp-back').style.display = 'flex';
+  document.getElementById('gameScreen').style.display = 'none';
+  document.getElementById('startScreen').style.display = 'flex';
+}
+document.getElementById('pause-btn').addEventListener('click', togglePause);
+document.getElementById('pause-resume-btn').addEventListener('click', togglePause);
+document.getElementById('pause-restart-btn').addEventListener('click', function() {
+  isPaused = false;
+  document.getElementById('pause-overlay').style.display = 'none';
+  document.getElementById('pause-btn').style.display = 'flex';
+  restartGame();
+});
+document.getElementById('pause-title-btn').addEventListener('click', goToTitleScreen);
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const btn = document.getElementById('pause-btn');
+    if (btn.style.display === 'flex' || isPaused) togglePause();
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Checkers — PixelPlay</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #000; display: flex; align-items: center; justify-content: center;
+       min-height: 100vh; overflow: hidden; }
+canvas { display: block; max-width: 100vw; max-height: 100vh; }
+
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+<style>
+  #pp-back {
+    position: fixed !important;
+    top: 14px !important;
+    left: 14px !important;
+    z-index: 999999 !important;
+    transform: translateZ(1px) !important;
+    display: flex;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 8px 16px 8px 12px !important;
+    background: #2A3660 !important;
+    color: #ffffff !important;
+    font-family: 'Lilita One', Arial, sans-serif !important;
+    font-size: 15px !important;
+    text-decoration: none !important;
+    border-radius: 50px !important;
+    border: 2px solid rgba(255,255,255,0.25) !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4), 3px 3px 0 #1D284A !important;
+    letter-spacing: 0.3px !important;
+    -webkit-tap-highlight-color: transparent !important;
+    pointer-events: all !important;
+  }
+  #pp-back::before { content: '←' !important; font-size: 16px !important; }
+  #pp-back:hover  { background: #38AAEE !important; }
+  #pp-back:active { transform: translate(2px,2px) !important; }
+  canvas {
+    z-index: 1 !important;
+    touch-action: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+  }
+</style>
+</head>
+<body>
+<a id="pp-back" href="../../index.html">PixelPlay</a>
+<div id="orientation-warning" style="
+  display:none;position:fixed;inset:0;z-index:9999;background:#0d1622;
+  flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;font-family:'Lilita One',Arial,sans-serif;color:#fff;
+  text-align:center;padding:20px;">
+  <div style="font-size:52px;">📱↻</div>
+  <div style="font-size:24px;font-weight:900;">Rotate your device</div>
+  <div style="font-size:14px;opacity:0.6;max-width:260px;line-height:1.5;">
+    This game plays best in portrait mode
+  </div>
+</div>
+<script src="../../dist/littlejs.js"></script>
+<script src="../../templates/menus.js"></script>
+<script src="../../templates/gameFx.js"></script>
+<script src="ai.js"></script>
+<script src="game.js"></script>
+<script>
+(function() {
+  var warn = document.getElementById('orientation-warning');
+  function check() {
+    var mobile = window.innerWidth < 768;
+    var landscape = window.innerWidth > window.innerHeight;
+    warn.style.display = (mobile && landscape) ? 'flex' : 'none';
+  }
+  window.addEventListener('resize', check);
+  window.addEventListener('orientationchange', check);
+  setTimeout(check, 100);
+})();
+</script>
+</body>
+</html>

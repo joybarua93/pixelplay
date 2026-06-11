@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>8-Ball Pool — PixelPlay</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="matter.min.js"></script>
+<style>
+  #pp-back {
+    position: fixed !important;
+    top: 14px !important;
+    left: 14px !important;
+    z-index: 999999 !important;
+    transform: translateZ(1px) !important;
+    display: flex;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 8px 16px 8px 12px !important;
+    background: #2A3660 !important;
+    color: #ffffff !important;
+    font-family: 'Lilita One', Arial, sans-serif !important;
+    font-size: 15px !important;
+    text-decoration: none !important;
+    border-radius: 50px !important;
+    border: 2px solid rgba(255,255,255,0.25) !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4), 3px 3px 0 #1D284A !important;
+    letter-spacing: 0.3px !important;
+    -webkit-tap-highlight-color: transparent !important;
+    pointer-events: all !important;
+  }
+  #pp-back::before { content: '←' !important; font-size: 16px !important; }
+  #pp-back:hover  { background: #38AAEE !important; }
+  #pp-back:active { transform: translate(2px,2px) !important; }
+</style>
+</head>
+<body>
+
+    <a id="pp-back" href="../../index.html">PixelPlay</a>
+    <div id="orientation-warning" style="
+      display:none;position:fixed;inset:0;z-index:9999;background:#0d1622;
+      flex-direction:column;align-items:center;justify-content:center;
+      gap:16px;font-family:'Lilita One',Arial,sans-serif;color:#fff;
+      text-align:center;padding:20px;">
+      <div style="font-size:52px;">📱↻</div>
+      <div style="font-size:24px;font-weight:900;">Rotate your device</div>
+      <div style="font-size:14px;opacity:0.6;max-width:260px;line-height:1.5;">
+        This game plays best in landscape mode
+      </div>
+    </div>
+
+    <div id="game-container">
+        <div id="score-board">
+            <div id="turn-indicator" style="color:#00d4ff;font-size:18px;margin-bottom:4px;font-family:'Lilita One',sans-serif;">PLAYER 1'S TURN</div>
+            <span style="font-family:'Lilita One',sans-serif;font-size:15px;color:#fff;">P1: <span id="score1">0</span> | P2: <span id="score2">0</span></span><br>
+            <span id="scratch-warning" style="color:#ff3e3e;font-size:13px;display:none;font-family:'Lilita One',sans-serif;">SCRATCH! TURN LOST.</span>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="start-menu" class="menu-screen">
+            <div style="font-size:60px;line-height:1;margin-bottom:4px;">🎱</div>
+            <h1>8-BALL POOL</h1>
+            <p>Drag back to aim and sink the rack</p>
+            <p class="best-display">WINS: <span id="title-best">—</span></p>
+            <div class="btn-group">
+                <button class="menu-btn" data-mode="1p">VS AI</button>
+                <button class="menu-btn" data-mode="2p">2 PLAYER</button>
+            </div>
+        </div>
+
+        <div id="game-over-screen" class="menu-screen hidden">
+            <h1 id="winner-text">TABLE CLEARED</h1>
+            <p class="score-line">P1: <span id="final-p1">0</span> | P2: <span id="final-p2">0</span></p>
+            <p class="best-line">WINS: <span id="best-score">—</span></p>
+            <div class="btn-group" style="flex-direction:column;gap:10px;margin-top:12px;">
+                <button id="restart-btn" class="pause-btn">RACK 'EM UP</button>
+                <a class="pause-btn" href="../../index.html">← PIXELPLAY</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="pause-overlay" style="display:none;position:fixed;inset:0;
+        background:rgba(8,25,15,0.9);flex-direction:column;
+        align-items:center;justify-content:center;gap:16px;z-index:500;">
+        <div class="pause-title" style="color:#F5C200;">🎱 PAUSED</div>
+        <button class="pause-btn" onclick="togglePause()">RESUME</button>
+        <button class="pause-btn" onclick="restartGame()">RESTART</button>
+        <button class="pause-btn" onclick="goToTitleScreen()">☰ TITLE SCREEN</button>
+        <a href="../../index.html" style="font-family:'Lilita One',Arial,sans-serif;font-size:17px;background:#2A3660;color:#ffffff;border:3px solid #1D284A;border-radius:14px;padding:13px 0;width:220px;cursor:pointer;box-shadow:3px 3px 0 #1D284A;-webkit-tap-highlight-color:transparent;display:block;text-decoration:none;text-align:center;box-sizing:border-box;">← PixelPlay</a>
+    </div>
+
+    <button id="pause-btn" style="
+        position:fixed;top:14px;right:14px;z-index:2147483647;
+        width:40px;height:40px;background:rgba(42,54,96,0.85);color:#fff;
+        font-size:18px;border:2px solid rgba(255,255,255,0.25);border-radius:50%;
+        cursor:pointer;display:none;align-items:center;justify-content:center;
+        box-shadow:0 2px 8px rgba(0,0,0,0.4);-webkit-tap-highlight-color:transparent;
+        touch-action:manipulation;">⏸</button>
+
+    <script src="game.js"></script>
+</body>
+</html>

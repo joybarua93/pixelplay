@@ -1,0 +1,159 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body {
+    background-color: #0d1117;
+    font-family: 'Lilita One', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+}
+
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: #1a2a2a;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#gameCanvas {
+    display: block;
+    /* width/height set by JS */
+}
+
+#score-board {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #F5C200;
+    font-size: 20px;
+    font-family: 'Lilita One', sans-serif;
+    letter-spacing: 1px;
+    z-index: 5;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+}
+
+.menu-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        180deg,
+        rgba(26,107,138,0.88) 0%,
+        rgba(26,107,138,0.88) 40%,
+        rgba(42,42,42,0.88)   40%,
+        rgba(42,42,42,0.88)   100%
+    );
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    z-index: 10;
+    gap: 14px;
+}
+
+.menu-screen h1 {
+    font-family: 'Lilita One', sans-serif;
+    font-size: 52px;
+    letter-spacing: 4px;
+    color: #F5C200;
+    -webkit-text-stroke: 2px rgba(0,0,0,0.4);
+    text-shadow: 3px 3px 0 rgba(0,0,0,0.4);
+}
+
+#game-over-title {
+    font-family: 'Lilita One', sans-serif;
+    font-size: 42px;
+    color: #E84040 !important;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.5) !important;
+    letter-spacing: 2px;
+    text-align: center;
+}
+
+.menu-screen p {
+    font-size: 18px;
+    color: rgba(255,255,255,0.7);
+    font-family: 'Lilita One', sans-serif;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.best-display { color: #F5C200 !important; }
+
+.score-line {
+    font-size: 22px;
+    color: #fff !important;
+    font-family: 'Lilita One', sans-serif;
+    letter-spacing: 1px;
+}
+.best-line { color: #F5C200 !important; }
+
+.menu-screen.hidden { display: none !important; }
+
+.btn-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.menu-btn {
+    background: #F5C200;
+    padding: 12px 22px;
+    font-size: 15px;
+    font-family: 'Lilita One', sans-serif;
+    cursor: pointer;
+    border-radius: 8px;
+    border: 2px solid #1a1a1a;
+    color: #1a1a1a;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+}
+.menu-btn:hover { background: #ffd740; box-shadow: 0 0 12px rgba(245,194,0,0.4); }
+.menu-btn.hard  { background: #E84040; border-color: #9b1c1c; color: #fff; }
+.menu-btn.hard:hover { background: #ff5555; }
+
+@keyframes frogBob {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-10px) scaleX(1.05); }
+}
+.frog-bob { animation: frogBob 1.4s ease-in-out infinite; }
+
+.pause-title {
+    font-family: 'Lilita One', sans-serif;
+    font-size: 30px;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+.pause-btn {
+    font-family: 'Lilita One', sans-serif;
+    background: #2A3660;
+    color: #fff;
+    border: 3px solid #1D284A;
+    border-radius: 14px;
+    padding: 12px 32px;
+    font-size: 16px;
+    cursor: pointer;
+    min-width: 200px;
+    box-shadow: 3px 3px 0 #1D284A;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    transition: background 0.15s;
+}
+.pause-btn:hover { background: #F5C200; color: #1a1a1a; }

@@ -1,0 +1,163 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body {
+    background-color: #0d1118;
+    font-family: 'Lilita One', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+}
+
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: #0d1118;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#gameCanvas {
+    display: block;
+    background: #0d1118;
+    /* width/height set by JS */
+}
+
+#score-board {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: #F97316;
+    font-size: 20px;
+    font-family: 'Lilita One', sans-serif;
+    letter-spacing: 1px;
+    z-index: 5;
+    display: block;
+    image-rendering: pixelated;
+}
+
+.menu-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+        #0d1118
+        repeating-linear-gradient(0deg,  rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 32px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 32px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    z-index: 10;
+    gap: 14px;
+}
+
+.menu-screen h1 {
+    font-family: 'Lilita One', sans-serif;
+    font-size: 52px;
+    letter-spacing: 4px;
+    color: #F97316;
+    text-shadow:
+        0 0 20px rgba(249,115,22,0.6),
+        0 0 40px rgba(249,115,22,0.35),
+        0 0 70px rgba(249,115,22,0.2);
+}
+
+.gameover-title {
+    font-family: 'Lilita One', sans-serif;
+    font-size: 38px;
+    color: #F97316 !important;
+    text-shadow: 0 0 20px rgba(249,115,22,0.5) !important;
+    letter-spacing: 2px;
+    text-align: center;
+}
+
+.menu-screen p {
+    font-size: 18px;
+    color: rgba(255,255,255,0.5);
+    font-family: 'Lilita One', sans-serif;
+}
+
+.best-display {
+    font-size: 16px !important;
+    color: #F5C200 !important;
+}
+
+.score-line {
+    font-size: 22px;
+    color: #fff !important;
+    font-family: 'Lilita One', sans-serif;
+    letter-spacing: 1px;
+}
+.best-line { color: #F5C200 !important; }
+
+.menu-screen.hidden { display: none !important; }
+
+.btn-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.menu-btn {
+    background: transparent;
+    padding: 12px 22px;
+    font-size: 15px;
+    font-family: 'Lilita One', sans-serif;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+}
+
+.menu-btn.easy   { border: 2px solid #F97316; color: #F97316; }
+.menu-btn.easy:hover   { background: #F97316; color: #0d1118; box-shadow: 0 0 18px rgba(249,115,22,0.4); }
+.menu-btn.medium { border: 2px solid #F97316; color: #F97316; }
+.menu-btn.medium:hover { background: #F97316; color: #0d1118; box-shadow: 0 0 18px rgba(249,115,22,0.4); }
+.menu-btn.hard   { border: 2px solid #E84040; color: #E84040; }
+.menu-btn.hard:hover   { background: #E84040; color: #0d1118; box-shadow: 0 0 18px rgba(232,64,64,0.4); }
+
+@keyframes bombBounce {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    25%       { transform: translateY(-14px) rotate(-12deg); }
+    75%       { transform: translateY(-5px)  rotate(6deg); }
+}
+.bomb-bounce { animation: bombBounce 1.3s ease-in-out infinite; }
+
+.pause-title {
+    font-family: 'Lilita One', sans-serif;
+    font-size: 36px;
+    letter-spacing: 2px;
+}
+
+.pause-btn {
+    font-family: 'Lilita One', sans-serif;
+    background: #2A3660;
+    color: #fff;
+    border: 3px solid #1D284A;
+    border-radius: 14px;
+    padding: 12px 32px;
+    font-size: 16px;
+    cursor: pointer;
+    min-width: 200px;
+    box-shadow: 3px 3px 0 #1D284A;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    transition: background 0.15s;
+}
+.pause-btn:hover { background: #F97316; }

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quad Pong — PixelPlay</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+<style>
+  #pp-back {
+    position: fixed !important;
+    top: 14px !important;
+    left: 14px !important;
+    z-index: 999999 !important;
+    transform: translateZ(1px) !important;
+    display: flex;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 8px 16px 8px 12px !important;
+    background: #2A3660 !important;
+    color: #ffffff !important;
+    font-family: 'Lilita One', Arial, sans-serif !important;
+    font-size: 15px !important;
+    text-decoration: none !important;
+    border-radius: 50px !important;
+    border: 2px solid rgba(255,255,255,0.25) !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4), 3px 3px 0 #1D284A !important;
+    letter-spacing: 0.3px !important;
+    -webkit-tap-highlight-color: transparent !important;
+    pointer-events: all !important;
+  }
+  #pp-back::before { content: '←' !important; font-size: 16px !important; }
+  #pp-back:hover  { background: #38AAEE !important; }
+  #pp-back:active { transform: translate(2px,2px) !important; }
+</style>
+</head>
+<body>
+
+<a id="pp-back" href="../../index.html">PixelPlay</a>
+
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="score-p1" class="score-display bottom-left hidden" style="color:#00d4ff;"></div>
+        <div id="score-p2" class="score-display top-right  hidden" style="color:#f44336;"></div>
+        <div id="score-p3" class="score-display top-left   hidden" style="color:#4caf50;"></div>
+        <div id="score-p4" class="score-display bottom-right hidden" style="color:#ffeb3b;"></div>
+
+        <!-- Screen 1: Player count -->
+        <div id="start-menu" class="menu-screen">
+            <h1 style="font-family:'Lilita One',Arial,sans-serif;font-size:48px;
+                letter-spacing:4px;color:#00d4ff;
+                text-shadow:0 0 20px #00d4ff,0 0 40px #00d4ff;">⚡ QUAD PONG</h1>
+            <p style="color:#a9b0c0;letter-spacing:1px;">Four sides. One ball. Last paddle standing.</p>
+            <p class="best-display" style="font-size:14px;color:#888;letter-spacing:2px;margin-top:-8px;">
+                WINS: <span id="title-wins">—</span>
+            </p>
+            <div class="btn-group" style="flex-direction:column;gap:12px;width:220px;">
+                <button class="menu-btn p2-btn" onclick="selectPlayerCount(2)">2 PLAYERS</button>
+                <button class="menu-btn p3-btn" onclick="selectPlayerCount(3)">3 PLAYERS</button>
+                <button class="menu-btn p4-btn" onclick="selectPlayerCount(4)">4 PLAYERS</button>
+            </div>
+            <a href="../../index.html" class="back-link">← PixelPlay</a>
+        </div>
+
+        <!-- Screen 2: Mode (2P only) -->
+        <div id="mode-menu" class="menu-screen hidden">
+            <h2 style="font-family:'Lilita One',Arial,sans-serif;font-size:32px;
+                color:#9c27b0;letter-spacing:3px;">2 PLAYERS</h2>
+            <p style="color:#a9b0c0;letter-spacing:1px;">Choose your game mode</p>
+            <div class="btn-group" style="flex-direction:column;gap:12px;width:220px;margin-top:8px;">
+                <button class="menu-btn p2-btn" onclick="selectMode(true)">VS AI</button>
+                <button class="menu-btn p4-btn" onclick="selectMode(false)">LOCAL 2P</button>
+                <button class="menu-btn qp-back-btn" onclick="showStartMenu()">← BACK</button>
+            </div>
+        </div>
+
+        <!-- Screen 3: Speed -->
+        <div id="speed-menu" class="menu-screen hidden">
+            <h2 id="speed-title" style="font-family:'Lilita One',Arial,sans-serif;font-size:32px;
+                color:#00d4ff;letter-spacing:3px;">4 PLAYERS</h2>
+            <p style="color:#a9b0c0;letter-spacing:1px;">Ball speed</p>
+            <div class="speed-track-row">
+                <button class="speed-dot" data-s="1" onclick="setSpeed(1)"></button>
+                <button class="speed-dot" data-s="2" onclick="setSpeed(2)"></button>
+                <button class="speed-dot" data-s="3" onclick="setSpeed(3)"></button>
+                <button class="speed-dot" data-s="4" onclick="setSpeed(4)"></button>
+                <button class="speed-dot" data-s="5" onclick="setSpeed(5)"></button>
+            </div>
+            <div class="speed-labels">
+                <span>SLOW</span><span></span><span>NORMAL</span><span></span><span>INSANE</span>
+            </div>
+            <div id="speed-label" class="speed-selected-label">NORMAL</div>
+            <div class="btn-group" style="flex-direction:column;gap:12px;width:220px;margin-top:4px;">
+                <button class="menu-btn play-btn" onclick="startWithSettings()">▶ PLAY</button>
+                <button class="menu-btn qp-back-btn" onclick="showPrev()">← BACK</button>
+            </div>
+        </div>
+
+        <!-- Game over screen -->
+        <div id="game-over-screen" class="menu-screen hidden">
+            <h1 id="winner-text" style="font-family:'Lilita One',Arial,sans-serif;font-size:42px;
+                letter-spacing:3px;color:#fff;text-shadow:0 0 20px currentColor;">P1 WINS!</h1>
+            <p style="color:#888;letter-spacing:2px;font-size:14px;">
+                YOUR WINS: <span id="go-wins" style="color:#00d4ff;">—</span>
+            </p>
+            <div class="btn-group" style="flex-direction:column;gap:12px;width:220px;margin-top:12px;">
+                <button class="menu-btn play-btn" onclick="qpReturnToMenu()">PLAY AGAIN</button>
+                <a class="menu-btn qp-back-btn" href="../../index.html"
+                    style="text-align:center;text-decoration:none;">← PIXELPLAY</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pause overlay -->
+    <div id="qp-pause" style="display:none;position:fixed;inset:0;
+        background:rgba(5,5,10,0.92);flex-direction:column;
+        align-items:center;justify-content:center;gap:16px;z-index:500000;">
+        <div style="font-family:'Lilita One',Arial,sans-serif;font-size:36px;
+            color:#00d4ff;letter-spacing:4px;text-shadow:0 0 20px #00d4ff;">PAUSED</div>
+        <button class="menu-btn p4-btn" onclick="toggleQPPause()"
+            style="max-width:240px;">RESUME</button>
+        <button class="menu-btn p3-btn" onclick="qpReturnToMenu()"
+            style="max-width:240px;">RESTART</button>
+        <a href="../../index.html" style="font-family:'Lilita One',Arial,sans-serif;font-size:17px;background:#2A3660;color:#ffffff;border:3px solid #1D284A;border-radius:14px;padding:13px 0;width:220px;cursor:pointer;box-shadow:3px 3px 0 #1D284A;-webkit-tap-highlight-color:transparent;display:block;text-decoration:none;text-align:center;box-sizing:border-box;">← PixelPlay</a>
+    </div>
+
+    <button id="pause-btn" style="
+        position:fixed;top:14px;right:14px;z-index:2147483647;
+        width:40px;height:40px;background:rgba(42,54,96,0.85);color:#fff;
+        font-size:18px;border:2px solid rgba(255,255,255,0.25);border-radius:50%;
+        cursor:pointer;display:none;align-items:center;justify-content:center;
+        box-shadow:0 2px 8px rgba(0,0,0,0.4);-webkit-tap-highlight-color:transparent;
+        touch-action:manipulation;">⏸</button>
+
+    <script src="matter.min.js"></script>
+    <script src="game.js"></script>
+    <script>
+    function qpReturnToMenu() {
+        qpPaused = false;
+        gameStarted = false;
+        gameRunning = false;
+        var p = document.getElementById('qp-pause');
+        if (p) p.style.display = 'none';
+        document.getElementById('pause-btn').style.display = 'none';
+        document.getElementById('pp-back').style.display = 'flex';
+        showStartMenu();
+    }
+    </script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+{
+    "title": "Checkers — PixelPlay",
+    "sources": ["ai.js", "game.js"]
+}

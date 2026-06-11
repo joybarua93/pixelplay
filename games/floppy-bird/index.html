@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Floppy Bird — PixelPlay</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+<style>
+  #pp-back {
+    position: fixed !important;
+    top: 14px !important;
+    left: 14px !important;
+    z-index: 999999 !important;
+    transform: translateZ(1px) !important;
+    display: flex;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 8px 16px 8px 12px !important;
+    background: #2A3660 !important;
+    color: #ffffff !important;
+    font-family: 'Lilita One', Arial, sans-serif !important;
+    font-size: 15px !important;
+    text-decoration: none !important;
+    border-radius: 50px !important;
+    border: 2px solid rgba(255,255,255,0.25) !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4), 3px 3px 0 #1D284A !important;
+    letter-spacing: 0.3px !important;
+    -webkit-tap-highlight-color: transparent !important;
+    pointer-events: all !important;
+  }
+  #pp-back::before { content: '←' !important; font-size: 16px !important; }
+  #pp-back:hover  { background: #38AAEE !important; }
+  #pp-back:active { transform: translate(2px,2px) !important; }
+</style>
+</head>
+<body>
+
+    <a id="pp-back" href="../../index.html">PixelPlay</a>
+
+    <div id="game-container">
+        <div id="score-board">SCORE: <span id="score">0</span></div>
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="start-menu" class="menu-screen">
+            <div class="bird-bob" style="font-size:64px;line-height:1;">🐦</div>
+            <h1>FLOPPY BIRD</h1>
+            <p>Tap to flap. Don't hit the pipes.</p>
+            <p class="best-display">BEST: <span id="title-best">0</span></p>
+            <div class="btn-group">
+                <button class="menu-btn easy"   data-difficulty="easy">EASY</button>
+                <button class="menu-btn medium" data-difficulty="medium">MEDIUM</button>
+                <button class="menu-btn hard"   data-difficulty="hard">HARD</button>
+            </div>
+        </div>
+
+        <div id="game-over-screen" class="menu-screen hidden">
+            <h1 class="gameover-title">GAME OVER</h1>
+            <p class="score-line">SCORE: <span id="final-score">0</span></p>
+            <p class="score-line best-line">BEST: <span id="best-score">0</span></p>
+            <div class="btn-group" style="flex-direction:column;gap:10px;margin-top:12px;">
+                <button id="restart-btn" class="pause-btn">TRY AGAIN</button>
+                <a class="pause-btn" href="../../index.html">← PIXELPLAY</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="pause-overlay" style="display:none;position:fixed;inset:0;
+        background:rgba(135,206,235,0.85);flex-direction:column;
+        align-items:center;justify-content:center;gap:16px;z-index:500;">
+        <div class="pause-title" style="color:#2d5a27;">PAUSED 🐦</div>
+        <button class="pause-btn green-btn" onclick="togglePause()">RESUME</button>
+        <button class="pause-btn green-btn" onclick="restartGame()">RESTART</button>
+        <button class="pause-btn green-btn" onclick="goToTitleScreen()">☰ TITLE SCREEN</button>
+        <a href="../../index.html" style="font-family:'Lilita One',Arial,sans-serif;font-size:17px;background:#2A3660;color:#ffffff;border:3px solid #1D284A;border-radius:14px;padding:13px 0;width:220px;cursor:pointer;box-shadow:3px 3px 0 #1D284A;-webkit-tap-highlight-color:transparent;display:block;text-decoration:none;text-align:center;box-sizing:border-box;">← PixelPlay</a>
+    </div>
+
+    <button id="pause-btn" style="
+        position:fixed;top:14px;right:14px;z-index:2147483647;
+        width:40px;height:40px;background:rgba(42,54,96,0.85);color:#fff;
+        font-size:18px;border:2px solid rgba(255,255,255,0.25);border-radius:50%;
+        cursor:pointer;display:none;align-items:center;justify-content:center;
+        box-shadow:0 2px 8px rgba(0,0,0,0.4);-webkit-tap-highlight-color:transparent;
+        touch-action:manipulation;">⏸</button>
+
+    <div id="orientation-warning" style="
+      display:none;position:fixed;inset:0;z-index:9999;background:#0d1622;
+      flex-direction:column;align-items:center;justify-content:center;
+      gap:16px;font-family:'Lilita One',Arial,sans-serif;color:#fff;
+      text-align:center;padding:20px;">
+      <div style="font-size:52px;">📱↻</div>
+      <div style="font-size:24px;font-weight:900;">Rotate your device</div>
+      <div style="font-size:14px;opacity:0.6;max-width:260px;line-height:1.5;">
+        This game plays best in portrait mode
+      </div>
+    </div>
+
+    <script src="game.js"></script>
+    <script>
+    (function() {
+      var warn = document.getElementById('orientation-warning');
+      function check() {
+        var mobile = window.innerWidth < 768;
+        var landscape = window.innerWidth > window.innerHeight;
+        warn.style.display = (mobile && landscape) ? 'flex' : 'none';
+      }
+      window.addEventListener('resize', check);
+      window.addEventListener('orientationchange', check);
+      setTimeout(check, 100);
+    })();
+    </script>
+</body>
+</html>

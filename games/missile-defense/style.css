@@ -1,0 +1,150 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body {
+    background-color: #000;
+    font-family: 'Lilita One', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+}
+
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#gameCanvas {
+    display: block;
+    background: #000;
+    /* width/height set by JS */
+}
+
+#score-board {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: #39FF14;
+    font-size: 20px;
+    font-family: 'Lilita One', sans-serif;
+    letter-spacing: 1px;
+    z-index: 5;
+    display: block;
+    image-rendering: pixelated;
+    text-shadow: 0 0 10px rgba(57,255,20,0.5);
+}
+
+.menu-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #39FF14;
+    z-index: 10;
+    gap: 14px;
+}
+
+.menu-screen h1 {
+    font-family: 'Lilita One', sans-serif;
+    font-size: 42px;
+    letter-spacing: 3px;
+    color: #39FF14;
+    text-shadow:
+        0 0 15px rgba(57,255,20,0.7),
+        0 0 35px rgba(57,255,20,0.4);
+}
+
+#game-over-title {
+    font-family: 'Lilita One', sans-serif;
+    font-size: 38px;
+    color: #E84040 !important;
+    text-shadow: 0 0 15px rgba(232,64,64,0.5) !important;
+    letter-spacing: 2px;
+    text-align: center;
+}
+
+.menu-screen p {
+    font-size: 17px;
+    color: rgba(57,255,20,0.7);
+    font-family: 'Lilita One', sans-serif;
+}
+
+.best-display { color: #39FF14 !important; }
+
+.score-line {
+    font-size: 22px;
+    color: #fff !important;
+    font-family: 'Lilita One', sans-serif;
+    letter-spacing: 1px;
+}
+.best-line { color: #39FF14 !important; }
+
+.menu-screen.hidden { display: none !important; }
+
+.btn-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.menu-btn {
+    background: transparent;
+    padding: 12px 22px;
+    font-size: 15px;
+    font-family: 'Lilita One', sans-serif;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+}
+
+.menu-btn.easy   { border: 2px solid #39FF14; color: #39FF14; }
+.menu-btn.easy:hover   { background: rgba(57,255,20,0.2); box-shadow: 0 0 15px rgba(57,255,20,0.4); }
+.menu-btn.medium { border: 2px solid #39FF14; color: #39FF14; }
+.menu-btn.medium:hover { background: rgba(57,255,20,0.2); box-shadow: 0 0 15px rgba(57,255,20,0.4); }
+.menu-btn.hard   { border: 2px solid #E84040; color: #E84040; }
+.menu-btn.hard:hover   { background: rgba(232,64,64,0.2); box-shadow: 0 0 15px rgba(232,64,64,0.4); }
+
+.pause-title {
+    font-family: 'Lilita One', sans-serif;
+    font-size: 36px;
+    letter-spacing: 4px;
+}
+
+.pause-btn {
+    font-family: 'Lilita One', sans-serif;
+    background: #0a1a08;
+    color: #39FF14;
+    border: 2px solid #39FF14;
+    border-radius: 8px;
+    padding: 12px 32px;
+    font-size: 16px;
+    cursor: pointer;
+    min-width: 200px;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    transition: all 0.15s;
+    text-shadow: 0 0 8px rgba(57,255,20,0.5);
+}
+.pause-btn:hover { background: rgba(57,255,20,0.15); box-shadow: 0 0 15px rgba(57,255,20,0.3); }

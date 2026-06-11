@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic Tac Toe — PixelPlay</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>❌</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@800&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: 'Lilita One', cursive;
+      background: #15102a;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      user-select: none;
+    }
+
+    /* ── Start Screen ── */
+    #start-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100dvh;
+      gap: 22px;
+      padding: 24px;
+      background: #15102a;
+    }
+    .start-emoji {
+      font-size: 76px;
+      filter: drop-shadow(0 0 24px rgba(139,92,246,0.7));
+      animation: floatEmoji 3s ease-in-out infinite;
+    }
+    @keyframes floatEmoji {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+    .start-title {
+      font-size: clamp(28px, 6vw, 40px);
+      color: #fff;
+      text-shadow: 0 0 20px rgba(139,92,246,0.6);
+    }
+    .start-sub {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 13px;
+      color: rgba(255,255,255,0.4);
+    }
+    .select-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 340px;
+    }
+    .section-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 0.1em;
+    }
+    .toggle-group { display: flex; gap: 10px; flex-wrap: wrap; }
+    .toggle-btn {
+      font-family: 'Lilita One', cursive;
+      font-size: 15px;
+      padding: 10px 22px;
+      border-radius: 10px;
+      border: 2px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.5);
+      cursor: pointer;
+      transition: all 0.15s;
+      min-height: 44px;
+    }
+    .toggle-btn.active {
+      background: #8b5cf6;
+      border-color: rgba(139,92,246,0.8);
+      color: #fff;
+      box-shadow: 0 0 16px rgba(139,92,246,0.5), 3px 3px 0 rgba(0,0,0,0.3);
+    }
+    #play-btn {
+      font-family: 'Lilita One', cursive;
+      font-size: 22px;
+      padding: 14px 60px;
+      background: #3DC46A;
+      color: #1D284A;
+      border: 3px solid #1D284A;
+      border-radius: 14px;
+      box-shadow: 4px 4px 0 #1D284A;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    #play-btn:hover  { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 #1D284A; }
+    #play-btn:active { transform: translate(2px,2px);  box-shadow: 2px 2px 0 #1D284A; }
+
+    /* ── Game Screen ── */
+    #game-screen { display: none; flex-direction: column; height: 100dvh; }
+
+    .top-bar {
+      background: #2A3660;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .back-btn {
+      color: #fff; font-size: 14px; text-decoration: none;
+      min-width: 64px; min-height: 44px;
+      display: flex; align-items: center; gap: 4px; z-index: 1;
+    }
+    .top-title {
+      color: #fff; font-size: 16px;
+      position: absolute; left: 50%; transform: translateX(-50%);
+    }
+    .mode-badge {
+      font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 11px;
+      background: rgba(255,255,255,0.15); color: #fff;
+      border-radius: 999px; padding: 4px 10px; white-space: nowrap; z-index: 1;
+    }
+
+    .game-area {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: #15102a; gap: 18px; padding: 16px; overflow: hidden;
+    }
+
+    /* Score strip */
+    .score-strip { display: flex; align-items: center; gap: 24px; }
+    .score-box { text-align: center; min-width: 88px; }
+    .score-label {
+      font-family: 'Press Start 2P', monospace; font-size: 7px;
+      color: rgba(255,255,255,0.35); margin-bottom: 4px; letter-spacing: 0.05em;
+    }
+    .score-num { font-size: 36px; line-height: 1; }
+    .score-sep { font-family: 'Press Start 2P', monospace; font-size: 9px; color: rgba(255,255,255,0.25); }
+    .score-x .score-num { color: #ff5b97; text-shadow: 0 0 14px #ff5b97; }
+    .score-o .score-num { color: #42eef0; text-shadow: 0 0 14px #42eef0; }
+
+    .turn-text {
+      font-family: 'Press Start 2P', monospace; font-size: 9px;
+      min-height: 22px; transition: color 0.2s;
+    }
+
+    /* Board */
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, var(--cell));
+      grid-template-rows: repeat(3, var(--cell));
+      --cell: min(28vw, 110px);
+    }
+    .cell {
+      width: var(--cell); height: var(--cell);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; position: relative; font-size: 54px;
+    }
+    /* Cyan grid lines via borders */
+    .cell { border: none; }
+    .cell:nth-child(1), .cell:nth-child(2), .cell:nth-child(3) { border-bottom: 3px solid #27e0e0; }
+    .cell:nth-child(4), .cell:nth-child(5), .cell:nth-child(6) { border-bottom: 3px solid #27e0e0; }
+    .cell:nth-child(1), .cell:nth-child(4), .cell:nth-child(7) { border-right: 3px solid #27e0e0; }
+    .cell:nth-child(2), .cell:nth-child(5), .cell:nth-child(8) { border-right: 3px solid #27e0e0; }
+    #board { filter: drop-shadow(0 0 8px rgba(39,224,224,0.35)); }
+
+    .cell-symbol {
+      position: absolute; font-size: min(13vw, 52px);
+      line-height: 1; pointer-events: none;
+      animation: popIn 0.2s cubic-bezier(0.17,0.67,0.3,1.5);
+    }
+    @keyframes popIn {
+      from { transform: scale(0.2) rotate(-15deg); opacity: 0; }
+      to   { transform: scale(1) rotate(0deg);     opacity: 1; }
+    }
+    .cell-x .cell-symbol { color: #ff5b97; text-shadow: 0 0 16px #ff5b97, 0 0 32px rgba(255,91,151,0.4); }
+    .cell-o .cell-symbol { color: #42eef0; text-shadow: 0 0 16px #42eef0, 0 0 32px rgba(66,238,240,0.4); }
+    .cell:not(.taken):hover { background: rgba(255,255,255,0.04); }
+    .cell.win-cell .cell-symbol { animation: winPulse 0.55s ease-in-out infinite alternate; }
+    @keyframes winPulse {
+      from { transform: scale(1); filter: brightness(1); }
+      to   { transform: scale(1.2); filter: brightness(1.4); }
+    }
+
+    /* Bottom Bar */
+    .bottom-bar {
+      background: #fff; height: 52px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; border-top: 3px solid #2A3660; flex-shrink: 0;
+    }
+    .bottom-score { font-family: 'Lilita One', cursive; color: #2A3660; font-size: 14px; }
+    .btn-bottom {
+      font-family: 'Lilita One', cursive; font-size: 14px; padding: 6px 16px;
+      border-radius: 8px; cursor: pointer; min-height: 36px;
+      border: 2px solid #2A3660; box-shadow: 3px 3px 0 #1D284A;
+      transition: transform 0.1s, box-shadow 0.1s;
+      text-decoration: none; display: inline-flex; align-items: center;
+    }
+    .btn-bottom:active { transform: translate(1px,1px); box-shadow: 2px 2px 0 #1D284A; }
+    .btn-restart { background: #3DC46A; color: #2A3660; }
+    .btn-home    { background: #2A3660; color: #fff; }
+
+    /* Overlay */
+    #overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(21,16,42,0.88); backdrop-filter: blur(6px);
+      align-items: center; justify-content: center; z-index: 50;
+      flex-direction: column; gap: 18px; padding: 24px; text-align: center;
+    }
+    #overlay.show { display: flex; }
+    .overlay-emoji  { font-size: 64px; }
+    .overlay-title  { font-size: clamp(28px, 6vw, 38px); }
+    .overlay-sub    { font-family: 'Nunito', sans-serif; font-weight: 800; color: rgba(255,255,255,0.45); font-size: 13px; }
+    .btn-play-again {
+      font-family: 'Lilita One', cursive; font-size: 20px; padding: 12px 44px;
+      background: #3DC46A; color: #1D284A; border: 3px solid #1D284A;
+      border-radius: 12px; box-shadow: 4px 4px 0 #1D284A; cursor: pointer; margin-top: 4px;
+    }
+    .btn-play-again:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 #1D284A; }
+  </style>
+<style>
+#pp-back {
+    position: fixed !important;
+    top: 14px !important;
+    left: 14px !important;
+    z-index: 2147483647 !important;
+    display: flex;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 8px 16px 8px 12px !important;
+    background: #2A3660 !important;
+    color: #ffffff !important;
+    font-family: 'Lilita One', Arial, sans-serif !important;
+    font-size: 15px !important;
+    text-decoration: none !important;
+    border-radius: 50px !important;
+    border: 2px solid rgba(255,255,255,0.25) !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4), 3px 3px 0 #1D284A !important;
+    letter-spacing: 0.3px !important;
+    -webkit-tap-highlight-color: transparent !important;
+    pointer-events: all !important;
+}
+#pp-back::before { content: '←' !important; font-size: 16px !important; }
+#pp-back:active { transform: translate(2px,2px) !important; box-shadow: 1px 1px 0 #1D284A !important; }
+</style>
+</head>
+<body>
+<a id="pp-back" href="../index.html">PixelPlay</a>
+
+<!-- ══ START SCREEN ══════════════════════════════════════════ -->
+<div id="start-screen">
+  <div class="start-emoji">❌</div>
+  <h1 class="start-title">Tic Tac Toe</h1>
+  <p class="start-sub">Noughts &amp; Crosses — with neon style</p>
+
+  <div class="select-group">
+    <span class="section-label">MODE</span>
+    <div class="toggle-group" id="mode-group">
+      <button class="toggle-btn active" data-mode="ai">🤖 vs AI</button>
+      <button class="toggle-btn"        data-mode="2p">👥 2 Player</button>
+    </div>
+  </div>
+
+  <div class="select-group" id="diff-section">
+    <span class="section-label">DIFFICULTY</span>
+    <div class="toggle-group" id="diff-group">
+      <button class="toggle-btn"        data-diff="easy">Easy</button>
+      <button class="toggle-btn active" data-diff="medium">Medium</button>
+      <button class="toggle-btn"        data-diff="hard">Hard</button>
+    </div>
+  </div>
+
+  <button id="play-btn">▶ PLAY</button>
+</div>
+
+<!-- ══ GAME SCREEN ═══════════════════════════════════════════ -->
+<div id="game-screen">
+  <div class="top-bar">
+    <div style="min-width:64px;"></div>
+    <span class="top-title">TIC TAC TOE</span>
+    <span class="mode-badge" id="mode-badge">🤖 vs AI</span>
+  </div>
+
+  <div class="game-area">
+    <div class="score-strip">
+      <div class="score-box score-x">
+        <div class="score-label" id="p1-label">YOU (X)</div>
+        <div class="score-num" id="score-x">0</div>
+      </div>
+      <span class="score-sep">VS</span>
+      <div class="score-box score-o">
+        <div class="score-label" id="p2-label">AI (O)</div>
+        <div class="score-num" id="score-o">0</div>
+      </div>
+    </div>
+
+    <div class="turn-text" id="turn-text">X's Turn</div>
+
+    <div id="board">
+      <div class="cell" data-idx="0"></div>
+      <div class="cell" data-idx="1"></div>
+      <div class="cell" data-idx="2"></div>
+      <div class="cell" data-idx="3"></div>
+      <div class="cell" data-idx="4"></div>
+      <div class="cell" data-idx="5"></div>
+      <div class="cell" data-idx="6"></div>
+      <div class="cell" data-idx="7"></div>
+      <div class="cell" data-idx="8"></div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <span class="bottom-score" id="round-info">Round 1</span>
+    <button class="btn-bottom btn-restart" id="restart-btn">↺ Restart</button>
+  </div>
+</div>
+
+<!-- ══ OVERLAY ═══════════════════════════════════════════════ -->
+<div id="overlay">
+  <div class="overlay-emoji" id="ov-emoji">🎉</div>
+  <div class="overlay-title" id="ov-title">X Wins!</div>
+  <div class="overlay-sub"   id="ov-sub">Round 1 · X 1 — O 0</div>
+  <button class="btn-play-again" id="play-again-btn">Next Round</button>
+</div>
+
+<script>
+(function () {
+  const WINS = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
+
+  let mode = 'ai', diff = 'medium';
+  let board, currentPlayer, scores, round, gameOver, aiLock;
+
+  /* ── Start screen controls ── */
+  document.querySelectorAll('#mode-group .toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#mode-group .toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      mode = btn.dataset.mode;
+      document.getElementById('diff-section').style.display = mode === 'ai' ? 'flex' : 'none';
+    });
+  });
+  document.querySelectorAll('#diff-group .toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#diff-group .toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      diff = btn.dataset.diff;
+    });
+  });
+
+  document.getElementById('play-btn').addEventListener('click', startGame);
+  document.getElementById('restart-btn').addEventListener('click', fullReset);
+  document.getElementById('play-again-btn').addEventListener('click', nextRound);
+
+  function startGame() {
+    document.getElementById('start-screen').style.display = 'none';
+    const gs = document.getElementById('game-screen');
+    gs.style.display = 'flex'; gs.style.flexDirection = 'column';
+    document.getElementById('pp-back').style.display = 'none';
+    document.getElementById('pause-btn').style.display = 'flex';
+    document.getElementById('mode-badge').textContent = mode === 'ai' ? '🤖 vs AI' : '👥 2P';
+    document.getElementById('p1-label').textContent = mode === 'ai' ? 'YOU (X)' : 'P1 (X)';
+    document.getElementById('p2-label').textContent = mode === 'ai' ? 'AI (O)'  : 'P2 (O)';
+    scores = { X: 0, O: 0 };
+    round  = 1;
+    resetBoard();
+  }
+
+  function resetBoard() {
+    board = Array(9).fill(null);
+    currentPlayer = 'X';
+    gameOver = false;
+    aiLock   = false;
+    document.getElementById('round-info').textContent = `Round ${round}`;
+    document.getElementById('score-x').textContent = scores.X;
+    document.getElementById('score-o').textContent = scores.O;
+    updateTurnText();
+    document.querySelectorAll('.cell').forEach(c => {
+      c.innerHTML = '';
+      c.className = 'cell';
+    });
+    document.getElementById('overlay').classList.remove('show');
+  }
+
+  function fullReset() { scores = { X: 0, O: 0 }; round = 1; resetBoard(); }
+  function nextRound()  { round++; resetBoard(); }
+
+  let isPaused = false;
+  function togglePause() {
+    isPaused = !isPaused;
+    document.getElementById('pause-overlay').style.display = isPaused ? 'flex' : 'none';
+    document.getElementById('pause-btn').style.display = isPaused ? 'none' : 'flex';
+  }
+  function goToTitleScreen() {
+    isPaused = false;
+    document.getElementById('pause-overlay').style.display = 'none';
+    document.getElementById('overlay').classList.remove('show');
+    document.getElementById('pause-btn').style.display = 'none';
+    document.getElementById('pp-back').style.display = 'flex';
+    document.getElementById('game-screen').style.display = 'none';
+    document.getElementById('start-screen').style.display = 'flex';
+  }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const btn = document.getElementById('pause-btn');
+      if (btn && (btn.style.display === 'flex' || isPaused)) togglePause();
+    }
+  });
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('pause-btn').addEventListener('click', togglePause);
+    document.getElementById('pause-resume-btn').addEventListener('click', togglePause);
+    document.getElementById('pause-restart-btn').addEventListener('click', function() {
+      isPaused = false;
+      document.getElementById('pause-overlay').style.display = 'none';
+      document.getElementById('pause-btn').style.display = 'flex';
+      fullReset();
+    });
+    document.getElementById('pause-title-btn').addEventListener('click', goToTitleScreen);
+  });
+
+  function updateTurnText() {
+    const el = document.getElementById('turn-text');
+    const isX = currentPlayer === 'X';
+    el.textContent = mode === '2p'
+      ? (isX ? "P1's Turn (X)" : "P2's Turn (O)")
+      : (isX ? "Your Turn (X)" : "AI Thinking…");
+    el.style.color = isX ? '#ff5b97' : '#42eef0';
+  }
+
+  /* ── Board interaction ── */
+  document.getElementById('board').addEventListener('click', e => {
+    const cell = e.target.closest('.cell');
+    if (!cell || gameOver || aiLock) return;
+    if (mode === 'ai' && currentPlayer === 'O') return;
+    const idx = parseInt(cell.dataset.idx);
+    if (board[idx]) return;
+    makeMove(idx, currentPlayer);
+  });
+
+  function makeMove(idx, player) {
+    board[idx] = player;
+    const cell = document.querySelector(`[data-idx="${idx}"]`);
+    cell.classList.add('taken', player === 'X' ? 'cell-x' : 'cell-o');
+    cell.innerHTML = `<span class="cell-symbol">${player === 'X' ? '✕' : '◯'}</span>`;
+
+    const win = checkWin(board, player);
+    if (win) {
+      win.forEach(i => document.querySelector(`[data-idx="${i}"]`).classList.add('win-cell'));
+      scores[player]++;
+      gameOver = true;
+      const label = mode === '2p'
+        ? (player === 'X' ? 'P1 Wins!' : 'P2 Wins!')
+        : (player === 'X' ? 'You Win! 🎉' : 'AI Wins!');
+      setTimeout(() => showOverlay(
+        label,
+        player === 'X' ? '🏆' : (mode === 'ai' ? '🤖' : '🏆'),
+        player === 'X' ? '#ff5b97' : '#42eef0'
+      ), 650);
+      return;
+    }
+    if (board.every(Boolean)) {
+      gameOver = true;
+      setTimeout(() => showOverlay("It's a Draw!", '🤝', '#fff'), 300);
+      return;
+    }
+
+    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+    updateTurnText();
+
+    if (mode === 'ai' && currentPlayer === 'O') {
+      aiLock = true;
+      setTimeout(aiTurn, diff === 'easy' ? 280 : 520);
+    }
+  }
+
+  function checkWin(b, p) {
+    for (const line of WINS) {
+      if (line.every(i => b[i] === p)) return line;
+    }
+    return null;
+  }
+
+  function showOverlay(title, emoji, color) {
+    document.getElementById('ov-title').textContent = title;
+    document.getElementById('ov-title').style.color = color;
+    document.getElementById('ov-title').style.textShadow = `0 0 20px ${color}`;
+    document.getElementById('ov-emoji').textContent = emoji;
+    document.getElementById('ov-sub').textContent =
+      `Round ${round} · X ${scores.X} — O ${scores.O}`;
+    document.getElementById('score-x').textContent = scores.X;
+    document.getElementById('score-o').textContent = scores.O;
+    document.getElementById('overlay').classList.add('show');
+  }
+
+  /* ── AI ── */
+  function aiTurn() {
+    const idx = diff === 'easy' ? randomMove()
+               : diff === 'medium' ? mediumMove()
+               : minimaxMove();
+    aiLock = false;
+    makeMove(idx, 'O');
+  }
+
+  function emptyCells(b) { return b.map((v,i) => v ? -1 : i).filter(i => i >= 0); }
+  function randomMove()  { const e = emptyCells(board); return e[Math.random() * e.length | 0]; }
+
+  function mediumMove() {
+    for (const i of emptyCells(board)) {
+      board[i] = 'O'; if (checkWin(board,'O')) { board[i] = null; return i; } board[i] = null;
+    }
+    for (const i of emptyCells(board)) {
+      board[i] = 'X'; if (checkWin(board,'X')) { board[i] = null; return i; } board[i] = null;
+    }
+    if (!board[4]) return 4;
+    return randomMove();
+  }
+
+  function minimaxMove() {
+    let best = -Infinity, bestIdx = emptyCells(board)[0];
+    for (const i of emptyCells(board)) {
+      board[i] = 'O';
+      const s = minimax(board, false, -Infinity, Infinity, 0);
+      board[i] = null;
+      if (s > best) { best = s; bestIdx = i; }
+    }
+    return bestIdx;
+  }
+
+  function minimax(b, isMax, alpha, beta, depth) {
+    if (checkWin(b,'O')) return 10 - depth;
+    if (checkWin(b,'X')) return depth - 10;
+    const empty = emptyCells(b);
+    if (!empty.length) return 0;
+
+    if (isMax) {
+      let v = -Infinity;
+      for (const i of empty) {
+        b[i] = 'O';
+        v = Math.max(v, minimax(b, false, alpha, beta, depth+1));
+        b[i] = null;
+        alpha = Math.max(alpha, v);
+        if (beta <= alpha) break;
+      }
+      return v;
+    } else {
+      let v = Infinity;
+      for (const i of empty) {
+        b[i] = 'X';
+        v = Math.min(v, minimax(b, true, alpha, beta, depth+1));
+        b[i] = null;
+        beta = Math.min(beta, v);
+        if (beta <= alpha) break;
+      }
+      return v;
+    }
+  }
+})();
+</script>
+
+<div id="pause-overlay" style="display:none;position:fixed;inset:0;background:rgba(5,5,15,0.92);flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:50000;">
+  <div style="font-family:'Lilita One',Arial,sans-serif;font-size:34px;color:#00d4ff;letter-spacing:4px;text-shadow:0 0 20px rgba(0,212,255,0.6);">PAUSED</div>
+  <button id="pause-resume-btn" style="font-family:'Lilita One',Arial,sans-serif;font-size:17px;padding:13px 0;width:220px;background:#3DC46A;color:#1D284A;border:3px solid #1D284A;border-radius:14px;box-shadow:3px 3px 0 #1D284A;cursor:pointer;-webkit-tap-highlight-color:transparent;box-sizing:border-box;">▶ RESUME</button>
+  <button id="pause-restart-btn" style="font-family:'Lilita One',Arial,sans-serif;font-size:17px;padding:13px 0;width:220px;background:#2A3660;color:#fff;border:3px solid #1D284A;border-radius:14px;box-shadow:3px 3px 0 #1D284A;cursor:pointer;-webkit-tap-highlight-color:transparent;box-sizing:border-box;">↺ RESTART</button>
+  <button id="pause-title-btn" style="font-family:'Lilita One',Arial,sans-serif;font-size:17px;padding:13px 0;width:220px;background:#2A3660;color:#fff;border:3px solid #1D284A;border-radius:14px;box-shadow:3px 3px 0 #1D284A;cursor:pointer;-webkit-tap-highlight-color:transparent;box-sizing:border-box;">☰ TITLE SCREEN</button>
+  <a href="../index.html" style="font-family:'Lilita One',Arial,sans-serif;font-size:17px;background:#2A3660;color:#ffffff;border:3px solid #1D284A;border-radius:14px;padding:13px 0;width:220px;cursor:pointer;box-shadow:3px 3px 0 #1D284A;-webkit-tap-highlight-color:transparent;display:block;text-decoration:none;text-align:center;box-sizing:border-box;">← PixelPlay</a>
+</div>
+<button id="pause-btn" style="position:fixed;top:14px;right:14px;z-index:50001;width:40px;height:40px;background:rgba(42,54,96,0.85);color:#fff;font-size:18px;border:2px solid rgba(255,255,255,0.25);border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.4);-webkit-tap-highlight-color:transparent;touch-action:manipulation;">⏸</button>
+</body>
+</html>

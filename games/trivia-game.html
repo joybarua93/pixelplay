@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trivia — PixelPlay</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>❓</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@800;900&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;overflow:hidden}
+    body{font-family:'Lilita One',cursive;background:#15102a;color:#fff;display:flex;flex-direction:column;height:100dvh;user-select:none}
+    #start-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100dvh;gap:20px;padding:24px;background:linear-gradient(160deg,#0d0920 0%,#15102a 100%)}
+    .start-emoji{font-size:76px;filter:drop-shadow(0 0 24px rgba(245,194,0,0.6));animation:pulse 2s ease-in-out infinite}
+    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+    .start-title{font-size:clamp(28px,6vw,40px);color:#fff;text-shadow:0 0 20px rgba(245,194,0,0.5)}
+    .start-sub{font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:rgba(255,255,255,0.4)}
+    .select-group{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px}
+    .section-label{font-family:'Press Start 2P',monospace;font-size:8px;color:rgba(255,255,255,0.35);letter-spacing:.1em}
+    .toggle-group{display:flex;gap:8px;flex-wrap:wrap}
+    .toggle-btn{font-family:'Lilita One',cursive;font-size:14px;padding:8px 18px;border-radius:10px;border:2px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.5);cursor:pointer;transition:all .15s;min-height:40px}
+    .toggle-btn.active{background:#F5C200;border-color:#1D284A;color:#1D284A;box-shadow:3px 3px 0 rgba(0,0,0,0.4)}
+    #play-btn{font-family:'Lilita One',cursive;font-size:22px;padding:14px 60px;background:#3DC46A;color:#1D284A;border:3px solid #1D284A;border-radius:14px;box-shadow:4px 4px 0 #1D284A;cursor:pointer;margin-top:4px;transition:transform .1s,box-shadow .1s}
+    #play-btn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 #1D284A}
+    #play-btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1D284A}
+    #game-screen{display:none;flex-direction:column;height:100dvh}
+    .top-bar{background:#2A3660;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;position:relative}
+    .back-btn{color:#fff;font-size:14px;text-decoration:none;min-width:64px;min-height:44px;display:flex;align-items:center;gap:4px;z-index:1}
+    .top-title{color:#fff;font-size:16px;position:absolute;left:50%;transform:translateX(-50%)}
+    .mode-badge{font-family:'Nunito',sans-serif;font-weight:800;font-size:11px;background:rgba(255,255,255,0.15);color:#fff;border-radius:999px;padding:4px 10px;white-space:nowrap;z-index:1}
+    .game-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:12px 16px;gap:10px;overflow-y:auto;background:linear-gradient(160deg,#0d0920 0%,#15102a 100%)}
+    /* Meta row */
+    .meta-row{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:520px}
+    .cat-badge{font-family:'Press Start 2P',monospace;font-size:8px;background:rgba(245,194,0,0.15);color:#F5C200;border:1px solid rgba(245,194,0,0.3);border-radius:999px;padding:5px 12px}
+    .q-num{font-family:'Press Start 2P',monospace;font-size:8px;color:rgba(255,255,255,0.4)}
+    /* Timer bar */
+    .timer-wrap{width:100%;max-width:520px;height:8px;background:rgba(255,255,255,0.1);border-radius:999px;overflow:hidden}
+    #timer-bar{height:100%;border-radius:999px;transition:width .1s linear,background .5s}
+    /* Scoreboard (multiplayer) */
+    #scoreboard{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:100%;max-width:520px}
+    .score-chip{padding:6px 14px;border-radius:999px;font-size:14px;border:2px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);white-space:nowrap;transition:all .2s}
+    .score-chip.active-player{border-color:#F5C200;background:rgba(245,194,0,0.15);box-shadow:0 0 10px rgba(245,194,0,0.3)}
+    /* Question */
+    #question-box{width:100%;max-width:520px;text-align:center;padding:4px 0}
+    #question-text{font-family:'Nunito',sans-serif;font-weight:900;font-size:clamp(16px,4vw,22px);color:#fff;line-height:1.4}
+    /* Answers */
+    #answers-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:520px}
+    .ans-btn{padding:12px 14px;border-radius:12px;border:3px solid rgba(0,0,0,0.3);font-family:'Lilita One',cursive;font-size:clamp(14px,3.5vw,17px);cursor:pointer;display:flex;align-items:center;gap:10px;min-height:52px;transition:transform .1s,box-shadow .1s,filter .15s;text-align:left;box-shadow:3px 3px 0 rgba(0,0,0,0.3)}
+    .ans-btn:active{transform:translate(1px,1px);box-shadow:2px 2px 0 rgba(0,0,0,0.3)}
+    .ans-btn.disabled{pointer-events:none}
+    .ans-btn.correct{filter:brightness(1.3);box-shadow:0 0 20px currentColor,3px 3px 0 rgba(0,0,0,0.3)!important}
+    .ans-btn.wrong{filter:brightness(0.5)}
+    .ans-letter{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);font-size:14px;flex-shrink:0}
+    .ans-a{background:#E84040;color:#fff}
+    .ans-b{background:#1565C0;color:#fff}
+    .ans-c{background:#c09000;color:#1D284A}
+    .ans-d{background:#3DC46A;color:#1D284A}
+    /* Streak */
+    #streak-badge{font-family:'Press Start 2P',monospace;font-size:9px;color:#F5C200;min-height:18px;text-align:center}
+    /* Bottom bar */
+    .bottom-bar{background:#fff;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-top:3px solid #2A3660;flex-shrink:0}
+    .bottom-score{font-family:'Lilita One',cursive;color:#2A3660;font-size:14px}
+    .btn-bottom{font-family:'Lilita One',cursive;font-size:14px;padding:6px 16px;border-radius:8px;cursor:pointer;min-height:36px;border:2px solid #2A3660;box-shadow:3px 3px 0 #1D284A;transition:transform .1s,box-shadow .1s;text-decoration:none;display:inline-flex;align-items:center}
+    .btn-bottom:active{transform:translate(1px,1px);box-shadow:2px 2px 0 #1D284A}
+    .btn-restart{background:#3DC46A;color:#2A3660}
+    .btn-home{background:#2A3660;color:#fff}
+    /* Results screen */
+    #results{display:none;position:fixed;inset:0;background:rgba(13,9,32,0.95);backdrop-filter:blur(6px);align-items:center;justify-content:center;z-index:50;flex-direction:column;gap:14px;padding:24px;text-align:center;overflow-y:auto}
+    #results.show{display:flex}
+    .res-emoji{font-size:60px}
+    .res-title{font-size:clamp(22px,5vw,34px);color:#F5C200;text-shadow:0 0 20px rgba(245,194,0,0.5)}
+    .res-sub{font-family:'Nunito',sans-serif;font-weight:800;color:rgba(255,255,255,0.4);font-size:13px}
+    .res-score{font-family:'Press Start 2P',monospace;font-size:13px;color:#fff;line-height:2.2}
+    .res-hs{font-family:'Press Start 2P',monospace;font-size:9px;color:#F5C200}
+    .btn-again{font-family:'Lilita One',cursive;font-size:20px;padding:12px 44px;background:#3DC46A;color:#1D284A;border:3px solid #1D284A;border-radius:12px;box-shadow:4px 4px 0 #1D284A;cursor:pointer;margin-top:4px}
+  </style>
+<style>
+#pp-back {
+    position: fixed !important;
+    top: 14px !important;
+    left: 14px !important;
+    z-index: 2147483647 !important;
+    display: flex;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 8px 16px 8px 12px !important;
+    background: #2A3660 !important;
+    color: #ffffff !important;
+    font-family: 'Lilita One', Arial, sans-serif !important;
+    font-size: 15px !important;
+    text-decoration: none !important;
+    border-radius: 50px !important;
+    border: 2px solid rgba(255,255,255,0.25) !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4), 3px 3px 0 #1D284A !important;
+    letter-spacing: 0.3px !important;
+    -webkit-tap-highlight-color: transparent !important;
+    pointer-events: all !important;
+}
+#pp-back::before { content: '←' !important; font-size: 16px !important; }
+#pp-back:active { transform: translate(2px,2px) !important; box-shadow: 1px 1px 0 #1D284A !important; }
+</style>
+</head>
+<body>
+<a id="pp-back" href="../index.html">PixelPlay</a>
+<div id="start-screen">
+  <div class="start-emoji">❓</div>
+  <h1 class="start-title">Trivia</h1>
+  <p class="start-sub">Test your knowledge across 5 categories</p>
+  <div class="select-group">
+    <span class="section-label">MODE</span>
+    <div class="toggle-group" id="mode-group">
+      <button class="toggle-btn active" data-mode="solo">🎮 Solo</button>
+      <button class="toggle-btn" data-mode="2p">👥 2 Players</button>
+      <button class="toggle-btn" data-mode="3p">👥 3 Players</button>
+      <button class="toggle-btn" data-mode="4p">👥 4 Players</button>
+    </div>
+  </div>
+  <div class="select-group" id="cat-section">
+    <span class="section-label">CATEGORY</span>
+    <div class="toggle-group" id="cat-group">
+      <button class="toggle-btn active" data-cat="all">🌍 All</button>
+      <button class="toggle-btn" data-cat="General">🌐 General</button>
+      <button class="toggle-btn" data-cat="Sports">⚽ Sports</button>
+      <button class="toggle-btn" data-cat="Science">🔬 Science</button>
+      <button class="toggle-btn" data-cat="History">📜 History</button>
+      <button class="toggle-btn" data-cat="Pop Culture">🎬 Pop</button>
+    </div>
+  </div>
+  <button id="play-btn">▶ PLAY</button>
+</div>
+
+<div id="game-screen">
+  <div class="top-bar">
+    <div style="min-width:64px;"></div>
+    <span class="top-title">TRIVIA</span>
+    <span class="mode-badge" id="mode-badge">🎮 Solo</span>
+  </div>
+  <div class="game-area" id="game-area">
+    <div class="meta-row">
+      <span class="cat-badge" id="cat-badge">General</span>
+      <span class="q-num" id="q-num">Q 1/10</span>
+    </div>
+    <div class="timer-wrap"><div id="timer-bar"></div></div>
+    <div id="scoreboard"></div>
+    <div id="question-box">
+      <div id="question-text">Loading...</div>
+    </div>
+    <div id="answers-grid"></div>
+    <div id="streak-badge"></div>
+  </div>
+  <div class="bottom-bar">
+    <span class="bottom-score" id="btm-score">Score: 0</span>
+    <button class="btn-bottom btn-restart" id="restart-btn">↺ Restart</button>
+  </div>
+</div>
+
+<div id="results">
+  <div class="res-emoji" id="res-emoji">🏆</div>
+  <div class="res-title" id="res-title">Amazing!</div>
+  <div class="res-score" id="res-score"></div>
+  <div class="res-hs"    id="res-hs"></div>
+  <div class="res-sub" id="res-sub"></div>
+  <button class="btn-again" id="btn-again">Play Again</button>
+</div>
+
+<script>
+(function(){
+'use strict';
+const TIMER_S=15, SOLO_Q=10, MP_WIN=20;
+const COLORS=['#E84040','#1565C0','#c09000','#3DC46A'];
+const LETTERS=['A','B','C','D'];
+const ANS_CLS=['ans-a','ans-b','ans-c','ans-d'];
+
+const QBANK=[
+  // General Knowledge
+  {q:"What is the capital of France?",a:["Paris","London","Rome","Berlin"],c:0,cat:"General"},
+  {q:"How many sides does a hexagon have?",a:["5","6","7","8"],c:1,cat:"General"},
+  {q:"What planet is known as the Red Planet?",a:["Venus","Jupiter","Mars","Saturn"],c:2,cat:"General"},
+  {q:"Who painted the Mona Lisa?",a:["Michelangelo","Raphael","Donatello","Leonardo da Vinci"],c:3,cat:"General"},
+  {q:"What is the largest ocean on Earth?",a:["Atlantic","Indian","Arctic","Pacific"],c:3,cat:"General"},
+  {q:"How many continents are there?",a:["5","6","7","8"],c:2,cat:"General"},
+  {q:"What gas do plants absorb from the atmosphere?",a:["Oxygen","Nitrogen","Carbon Dioxide","Hydrogen"],c:2,cat:"General"},
+  {q:"What is the hardest natural substance?",a:["Gold","Iron","Diamond","Quartz"],c:2,cat:"General"},
+  {q:"How many hours are in a day?",a:["12","24","36","48"],c:1,cat:"General"},
+  {q:"What is the smallest country in the world?",a:["Monaco","Maldives","San Marino","Vatican City"],c:3,cat:"General"},
+  {q:"In what year did World War II end?",a:["1943","1944","1945","1946"],c:2,cat:"General"},
+  {q:"What is the chemical symbol for water?",a:["WA","H₂O","HO","W"],c:1,cat:"General"},
+  // Sports
+  {q:"How many players are on a basketball team on the court?",a:["4","5","6","7"],c:1,cat:"Sports"},
+  {q:"How many points is a touchdown worth in American Football?",a:["3","6","7","8"],c:1,cat:"Sports"},
+  {q:"In tennis, what comes after deuce?",a:["Love","Advantage","Set","Match"],c:1,cat:"Sports"},
+  {q:"How many holes are on a standard golf course?",a:["9","12","18","24"],c:2,cat:"Sports"},
+  {q:"What sport uses a shuttlecock?",a:["Tennis","Squash","Badminton","Pickleball"],c:2,cat:"Sports"},
+  {q:"How long is an Olympic swimming pool in meters?",a:["25","50","75","100"],c:1,cat:"Sports"},
+  {q:"In soccer, how many players are on each team?",a:["9","10","11","12"],c:2,cat:"Sports"},
+  {q:"What country invented basketball?",a:["Canada","USA","UK","France"],c:1,cat:"Sports"},
+  {q:"How many sets in a men's Grand Slam tennis match?",a:["3","4","5","2"],c:2,cat:"Sports"},
+  {q:"What sport is played at Wimbledon?",a:["Cricket","Tennis","Croquet","Golf"],c:1,cat:"Sports"},
+  {q:"How many rings are on the Olympic flag?",a:["3","4","5","6"],c:2,cat:"Sports"},
+  {q:"What is the highest score in a single bowling frame?",a:["10","20","30","40"],c:2,cat:"Sports"},
+  // Science
+  {q:"What is the speed of light (approximately)?",a:["100,000 km/s","300,000 km/s","500,000 km/s","1,000,000 km/s"],c:1,cat:"Science"},
+  {q:"How many bones are in the adult human body?",a:["186","196","206","216"],c:2,cat:"Science"},
+  {q:"What is the powerhouse of the cell?",a:["Nucleus","Ribosome","Mitochondria","Golgi body"],c:2,cat:"Science"},
+  {q:"What is the atomic number of carbon?",a:["4","6","8","12"],c:1,cat:"Science"},
+  {q:"What planet has the most moons?",a:["Jupiter","Saturn","Uranus","Neptune"],c:1,cat:"Science"},
+  {q:"What is the most abundant gas in Earth's atmosphere?",a:["Oxygen","Carbon Dioxide","Nitrogen","Argon"],c:2,cat:"Science"},
+  {q:"What is the unit of electrical resistance?",a:["Volt","Watt","Ampere","Ohm"],c:3,cat:"Science"},
+  {q:"How many chromosomes do humans have?",a:["23","46","48","64"],c:1,cat:"Science"},
+  {q:"What is the chemical symbol for gold?",a:["Go","Gd","Au","Ag"],c:2,cat:"Science"},
+  {q:"What is absolute zero in Celsius?",a:["-173°C","-273°C","-373°C","-473°C"],c:1,cat:"Science"},
+  {q:"What type of rock is formed from cooled lava?",a:["Sedimentary","Metamorphic","Igneous","Limestone"],c:2,cat:"Science"},
+  {q:"What organ produces insulin?",a:["Liver","Kidney","Pancreas","Stomach"],c:2,cat:"Science"},
+  // History
+  {q:"In what year did the Titanic sink?",a:["1910","1912","1914","1916"],c:1,cat:"History"},
+  {q:"Who was the first President of the United States?",a:["John Adams","Thomas Jefferson","George Washington","Benjamin Franklin"],c:2,cat:"History"},
+  {q:"In what year did the Berlin Wall fall?",a:["1987","1988","1989","1990"],c:2,cat:"History"},
+  {q:"What ancient wonder was located in Alexandria?",a:["Hanging Gardens","Colossus","Great Library","Lighthouse"],c:3,cat:"History"},
+  {q:"Who discovered America in 1492?",a:["Vasco da Gama","Ferdinand Magellan","Amerigo Vespucci","Christopher Columbus"],c:3,cat:"History"},
+  {q:"What empire was Julius Caesar part of?",a:["Greek","Ottoman","Roman","Byzantine"],c:2,cat:"History"},
+  {q:"In what country did the Industrial Revolution begin?",a:["France","Germany","USA","England"],c:3,cat:"History"},
+  {q:"Who was the first human to walk on the moon?",a:["Buzz Aldrin","Neil Armstrong","Yuri Gagarin","John Glenn"],c:1,cat:"History"},
+  {q:"What year did World War I begin?",a:["1912","1913","1914","1915"],c:2,cat:"History"},
+  {q:"Which civilization built the pyramids of Giza?",a:["Roman","Greek","Mesopotamian","Egyptian"],c:3,cat:"History"},
+  {q:"In what city was the Eiffel Tower built?",a:["Rome","London","Paris","Berlin"],c:2,cat:"History"},
+  {q:"What was the name of the first artificial satellite?",a:["Apollo","Voyager","Sputnik","Explorer"],c:2,cat:"History"},
+  // Pop Culture
+  {q:"What movie features the line 'I'll be back'?",a:["Die Hard","Total Recall","Predator","The Terminator"],c:3,cat:"Pop Culture"},
+  {q:"Who sang 'Thriller'?",a:["Prince","Michael Jackson","David Bowie","Freddie Mercury"],c:1,cat:"Pop Culture"},
+  {q:"What is the highest-grossing video game franchise?",a:["Call of Duty","Grand Theft Auto","Mario","Minecraft"],c:2,cat:"Pop Culture"},
+  {q:"In what year was the first iPhone released?",a:["2005","2006","2007","2008"],c:2,cat:"Pop Culture"},
+  {q:"What streaming service produced 'Stranger Things'?",a:["HBO","Amazon","Netflix","Disney+"],c:2,cat:"Pop Culture"},
+  {q:"How many Harry Potter books are there?",a:["5","6","7","8"],c:2,cat:"Pop Culture"},
+  {q:"What company makes the PlayStation?",a:["Microsoft","Nintendo","Sega","Sony"],c:3,cat:"Pop Culture"},
+  {q:"Who played Iron Man in the Marvel movies?",a:["Chris Evans","Chris Hemsworth","Robert Downey Jr.","Mark Ruffalo"],c:2,cat:"Pop Culture"},
+  {q:"What is the best-selling video game of all time?",a:["Tetris","Minecraft","GTA V","Wii Sports"],c:1,cat:"Pop Culture"},
+  {q:"What year was YouTube founded?",a:["2003","2004","2005","2006"],c:2,cat:"Pop Culture"},
+  {q:"Who created Mickey Mouse?",a:["Walt Disney","Jim Henson","Chuck Jones","Tex Avery"],c:0,cat:"Pop Culture"},
+  {q:"What is the name of Batman's butler?",a:["James","Alfred","Winston","Edwin"],c:1,cat:"Pop Culture"},
+];
+
+let mode='solo', selectedCat='all';
+let questions, qIdx, playerCount, currentP;
+let scores, streaks, answered;
+let timerRaf, timerStart, timerDur, timerPaused;
+let highScore=parseInt(localStorage.getItem('pixelplay_trivia_hs')||'0');
+
+document.querySelectorAll('#mode-group .toggle-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#mode-group .toggle-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); mode=b.dataset.mode;
+}));
+document.querySelectorAll('#cat-group .toggle-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#cat-group .toggle-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); selectedCat=b.dataset.cat;
+}));
+document.getElementById('play-btn').addEventListener('click',startGame);
+document.getElementById('restart-btn').addEventListener('click',()=>{cancelAnimationFrame(timerRaf);startGame()});
+document.getElementById('btn-again').addEventListener('click',()=>{document.getElementById('results').classList.remove('show');startGame()});
+
+function startGame(){
+  document.getElementById('start-screen').style.display='none';
+  const gs=document.getElementById('game-screen');
+  gs.style.display='flex';gs.style.flexDirection='column';
+  document.getElementById('pp-back').style.display='none';
+  document.getElementById('pause-btn').style.display='flex';
+  playerCount=mode==='solo'?1:mode==='2p'?2:mode==='3p'?3:4;
+  document.getElementById('mode-badge').textContent=mode==='solo'?'🎮 Solo':`👥 ${playerCount}P`;
+  scores=Array(playerCount).fill(0);
+  streaks=Array(playerCount).fill(0);
+  currentP=0; qIdx=0;
+
+  // Shuffle question pool
+  let pool=QBANK.filter(q=>selectedCat==='all'||q.cat===selectedCat);
+  if(pool.length<(mode==='solo'?10:20)) pool=[...QBANK]; // fallback to all
+  pool=shuffle(pool);
+  questions=pool.slice(0,mode==='solo'?10:Math.min(pool.length,40));
+
+  showQuestion();
+}
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function showQuestion(){
+  if(qIdx>=questions.length){endGame();return;}
+  const q=questions[qIdx];
+  answered=false;
+
+  // Meta
+  document.getElementById('cat-badge').textContent=q.cat;
+  document.getElementById('q-num').textContent=`Q ${qIdx+1}/${questions.length}`;
+
+  // Scoreboard
+  const sb=document.getElementById('scoreboard');
+  sb.innerHTML='';
+  if(playerCount>1){
+    for(let i=0;i<playerCount;i++){
+      const chip=document.createElement('div');
+      chip.className='score-chip'+(i===currentP?' active-player':'');
+      chip.textContent=`P${i+1}: ${scores[i]}`;
+      sb.appendChild(chip);
+    }
+  }
+  sb.style.display=playerCount>1?'flex':'none';
+
+  // Question
+  document.getElementById('question-text').textContent=q.q;
+
+  // Answers
+  const grid=document.getElementById('answers-grid');
+  grid.innerHTML='';
+  q.a.forEach((ans,i)=>{
+    const btn=document.createElement('button');
+    btn.className=`ans-btn ${ANS_CLS[i]}`;
+    btn.innerHTML=`<span class="ans-letter">${LETTERS[i]}</span><span>${ans}</span>`;
+    btn.addEventListener('click',()=>selectAnswer(i,q.c));
+    grid.appendChild(btn);
+  });
+
+  // Streak
+  const st=document.getElementById('streak-badge');
+  if(streaks[currentP]>=3) st.textContent=`🔥 ${streaks[currentP]}x streak!`;
+  else st.textContent='';
+
+  // Bottom score
+  updateBottomScore();
+
+  // Timer
+  startTimer();
+
+  // Turn indicator (multiplayer)
+  document.getElementById('top-title').textContent=playerCount>1?`P${currentP+1}'s TURN`:'TRIVIA';
+}
+
+function startTimer(){
+  cancelAnimationFrame(timerRaf);
+  timerStart=performance.now();
+  timerDur=TIMER_S*1000;
+  tickTimer();
+}
+
+function tickTimer(){
+  if(answered) return;
+  const elapsed=performance.now()-timerStart;
+  const pct=Math.max(0,1-elapsed/timerDur);
+  const bar=document.getElementById('timer-bar');
+  bar.style.width=(pct*100)+'%';
+  bar.style.background=pct>0.5?'#F5C200':pct>0.25?'#F97316':'#E84040';
+  if(pct<=0){
+    // Time out
+    selectAnswer(-1,questions[qIdx].c); // wrong answer
+    return;
+  }
+  timerRaf=requestAnimationFrame(tickTimer);
+}
+
+function selectAnswer(chosen,correct){
+  if(answered) return;
+  answered=true;
+  cancelAnimationFrame(timerRaf);
+
+  const elapsed=Math.min(TIMER_S,(performance.now()-timerStart)/1000);
+  const timeLeft=Math.max(0,TIMER_S-elapsed);
+  const isCorrect=chosen===correct;
+
+  // Highlight buttons
+  const btns=document.querySelectorAll('.ans-btn');
+  btns.forEach((b,i)=>{
+    b.classList.add('disabled');
+    if(i===correct) b.classList.add('correct');
+    else if(i===chosen&&!isCorrect) b.classList.add('wrong');
+  });
+
+  // Scoring
+  if(isCorrect){
+    const base=100;
+    const speed=Math.round(timeLeft/TIMER_S*50);
+    streaks[currentP]++;
+    const streak=streaks[currentP]>=3?25:0;
+    const pts=base+speed+streak;
+    scores[currentP]+=pts;
+    document.getElementById('streak-badge').textContent=streaks[currentP]>=3?`🔥 +${pts} pts (streak x${streaks[currentP]})`:` +${pts} pts`;
+  } else {
+    streaks[currentP]=0;
+    document.getElementById('streak-badge').textContent=chosen===-1?'⏰ Time\'s up!':'❌ Wrong!';
+  }
+
+  // Check win for multiplayer
+  if(playerCount>1&&scores.some(s=>s>=MP_WIN)){
+    setTimeout(endGame,1200); return;
+  }
+
+  // Next
+  setTimeout(()=>{
+    qIdx++;
+    if(playerCount>1){
+      currentP=(currentP+1)%playerCount;
+      if(currentP===0) qIdx--; // all players answered this question, advance
+      // In multiplayer, each player answers the same q in turn
+      // Simplification: rotate players, advance q when all have answered
+      // We'll track this with a turn counter instead
+    }
+    showQuestion();
+  },1500);
+}
+
+function updateBottomScore(){
+  if(playerCount===1){
+    document.getElementById('btm-score').textContent=`Score: ${scores[0]}  Best: ${highScore}`;
+  } else {
+    document.getElementById('btm-score').textContent=`P${currentP+1}'s turn · Win at ${MP_WIN}`;
+  }
+}
+
+function endGame(){
+  cancelAnimationFrame(timerRaf);
+
+  if(playerCount===1){
+    const s=scores[0];
+    if(s>highScore){highScore=s;localStorage.setItem('pixelplay_trivia_hs',s);}
+    const pct=s/(SOLO_Q*150);
+    document.getElementById('res-emoji').textContent=pct>.8?'🏆':pct>.5?'⭐':'🎮';
+    document.getElementById('res-title').textContent=pct>.8?'Brilliant!':pct>.5?'Well Done!':'Keep Practicing!';
+    document.getElementById('res-score').textContent=`Score: ${s} pts`;
+    document.getElementById('res-hs').textContent=`Best: ${highScore} pts`;
+    document.getElementById('res-sub').textContent=`${qIdx} questions · Correct: ${Math.round(scores[0]/100)} / ${qIdx}`;
+  } else {
+    const maxScore=Math.max(...scores);
+    const winner=scores.indexOf(maxScore)+1;
+    document.getElementById('res-emoji').textContent='🏆';
+    document.getElementById('res-title').textContent=`P${winner} Wins!`;
+    document.getElementById('res-score').innerHTML=scores.map((s,i)=>`P${i+1}: ${s} pts`).join('<br>');
+    document.getElementById('res-hs').textContent='';
+    document.getElementById('res-sub').textContent=`First to ${MP_WIN} points wins`;
+  }
+
+  document.getElementById('results').classList.add('show');
+}
+
+let isPaused=false, timerPausedElapsed=0;
+function togglePause(){
+  isPaused=!isPaused;
+  document.getElementById('pause-overlay').style.display=isPaused?'flex':'none';
+  document.getElementById('pause-btn').style.display=isPaused?'none':'flex';
+  if(isPaused){
+    cancelAnimationFrame(timerRaf);
+    timerPausedElapsed=performance.now()-timerStart;
+  } else {
+    if(!answered){timerStart=performance.now()-timerPausedElapsed;tickTimer();}
+  }
+}
+function goToTitleScreen(){
+  isPaused=false;
+  cancelAnimationFrame(timerRaf);
+  document.getElementById('pause-overlay').style.display='none';
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('pause-btn').style.display='none';
+  document.getElementById('pp-back').style.display='flex';
+  document.getElementById('game-screen').style.display='none';
+  document.getElementById('start-screen').style.display='flex';
+}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    const btn=document.getElementById('pause-btn');
+    if(btn&&(btn.style.display==='flex'||isPaused))togglePause();
+  }
+});
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('pause-btn').addEventListener('click',togglePause);
+  document.getElementById('pause-resume-btn').addEventListener('click',togglePause);
+  document.getElementById('pause-restart-btn').addEventListener('click',function(){
+    isPaused=false;
+    document.getElementById('pause-overlay').style.display='none';
+    document.getElementById('pause-btn').style.display='flex';
+    cancelAnimationFrame(timerRaf);
+    startGame();
+  });
+  document.getElementById('pause-title-btn').addEventListener('click',goToTitleScreen);
+});
+})();
+</script>
+
+<div id="pause-overlay" style="display:none;position:fixed;inset:0;background:rgba(5,5,15,0.92);flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:50000;">
+  <div style="font-family:'Lilita One',Arial,sans-serif;font-size:34px;color:#00d4ff;letter-spacing:4px;text-shadow:0 0 20px rgba(0,212,255,0.6);">PAUSED</div>
+  <button id="pause-resume-btn" style="font-family:'Lilita One',Arial,sans-serif;font-size:17px;padding:13px 0;width:220px;background:#3DC46A;color:#1D284A;border:3px solid #1D284A;border-radius:14px;box-shadow:3px 3px 0 #1D284A;cursor:pointer;-webkit-tap-highlight-color:transparent;box-sizing:border-box;">▶ RESUME</button>
+  <button id="pause-restart-btn" style="font-family:'Lilita One',Arial,sans-serif;font-size:17px;padding:13px 0;width:220px;background:#2A3660;color:#fff;border:3px solid #1D284A;border-radius:14px;box-shadow:3px 3px 0 #1D284A;cursor:pointer;-webkit-tap-highlight-color:transparent;box-sizing:border-box;">↺ RESTART</button>
+  <button id="pause-title-btn" style="font-family:'Lilita One',Arial,sans-serif;font-size:17px;padding:13px 0;width:220px;background:#2A3660;color:#fff;border:3px solid #1D284A;border-radius:14px;box-shadow:3px 3px 0 #1D284A;cursor:pointer;-webkit-tap-highlight-color:transparent;box-sizing:border-box;">☰ TITLE SCREEN</button>
+  <a href="../index.html" style="font-family:'Lilita One',Arial,sans-serif;font-size:17px;background:#2A3660;color:#ffffff;border:3px solid #1D284A;border-radius:14px;padding:13px 0;width:220px;cursor:pointer;box-shadow:3px 3px 0 #1D284A;-webkit-tap-highlight-color:transparent;display:block;text-decoration:none;text-align:center;box-sizing:border-box;">← PixelPlay</a>
+</div>
+<button id="pause-btn" style="position:fixed;top:14px;right:14px;z-index:50001;width:40px;height:40px;background:rgba(42,54,96,0.85);color:#fff;font-size:18px;border:2px solid rgba(255,255,255,0.25);border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.4);-webkit-tap-highlight-color:transparent;touch-action:manipulation;">⏸</button>
+</body>
+</html>
