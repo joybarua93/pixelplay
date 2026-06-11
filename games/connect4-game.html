@@ -383,11 +383,11 @@
 
   function calcCellSize() {
     const area = document.getElementById('game-area');
-    const aw = area.clientWidth - 40;
-    const ah = area.clientHeight - 120;
-    const byW = Math.floor((aw - 16) / COLS) - 6;
-    const byH = Math.floor((ah - 16) / ROWS) - 6;
-    cellSize = Math.max(28, Math.min(64, byW, byH));
+    // 76 = game-area padding (12×2=24) + board padding (8×2=16) + col gaps (6×6=36)
+    const byW = Math.floor((area.clientWidth - 76) / COLS);
+    // 166 = non-board UI above (~120) + board padding (16) + row gaps (6×5=30)
+    const byH = Math.floor((area.clientHeight - 166) / ROWS);
+    cellSize = Math.max(28, Math.min(80, byW, byH));
     document.documentElement.style.setProperty('--cs', cellSize + 'px');
     document.getElementById('preview-row').style.gridTemplateColumns = `repeat(7, ${cellSize}px)`;
     document.getElementById('preview-row').style.gap = '6px';
