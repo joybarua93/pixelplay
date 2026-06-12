@@ -141,7 +141,8 @@ const Engine    = Matter.Engine,
 
 let canvas, ctx, score1El, score2El, turnIndicator, scratchWarning,
     startMenu, gameOverScreen, restartBtn, winnerText,
-    bestScoreEl, titleBestEl, finalP1El, finalP2El;
+    bestScoreEl, titleBestEl, finalP1El, finalP2El,
+    p1LabelEl, p2LabelEl;
 let engine;
 
 // ─── Match State ──────────────────────────────────────────────────────────
@@ -153,6 +154,10 @@ let isGameOver = false;
 let gameRunning = false;
 let ballsSunkThisTurn = 0;
 let isFoul = false;
+let p1Group = null;        // 'red' | 'yellow' | null = open table
+let p2Group = null;
+let turnShouldPass = false;
+let eightBallSunk = false;
 
 // ─── Physics Entities ─────────────────────────────────────────────────────
 let cueBall;
@@ -164,7 +169,9 @@ const BALL_RADIUS = 12;
 // ─── Aiming & AI State ────────────────────────────────────────────────────
 let isAiming = false;
 let dragCurrent = { x: 0, y: 0 };
-const MAX_PULL = 150;
+const MAX_PULL  = 420;
+const MIN_SHOT  = 3;
+const MAX_SHOT  = 34;
 let aiTimer = null;
 
 function initPhysics() {
@@ -251,6 +258,7 @@ function buildTable() {
                 const isEight = (col === 2 && row === 1);
                 const ball = Bodies.circle(bx, by, BALL_RADIUS, ballOptions);
                 ball.color = isEight ? '#111' : (colorAlt ? '#f44336' : '#ffeb3b');
+                ball.group = isEight ? 'eight' : (colorAlt ? 'red' : 'yellow');
                 colorAlt = !colorAlt;
                 balls.push(ball);
             }
@@ -264,6 +272,7 @@ function buildTable() {
                 const isEight = (col === 2 && row === 1);
                 const ball = Bodies.circle(bx, by, BALL_RADIUS, ballOptions);
                 ball.color = isEight ? '#111' : (colorAlt ? '#f44336' : '#ffeb3b');
+                ball.group = isEight ? 'eight' : (colorAlt ? 'red' : 'yellow');
                 colorAlt = !colorAlt;
                 balls.push(ball);
             }
@@ -320,6 +329,46 @@ function resizeCanvas() {
 }
 
 // ─── Game Logic & Turn Management ────────────────────────────────────────
+function remainingFor(group) {
+    return balls.filter(b => b.group === group).length;
+}
+
+function endGame(winner) {
+    isGameOver  = true;
+    gameRunning = false;
+    clearTimeout(aiTimer);
+    const winnerMsg = winner === 1
+        ? 'PLAYER 1 WINS!'
+        : (isVsAI ? 'AI WINS!' : 'PLAYER 2 WINS!');
+    if (winner === 1) { saveBest(); sfxWin(); }
+    winnerText.textContent = winnerMsg;
+    if (finalP1El)   finalP1El.textContent   = p1Score;
+    if (finalP2El)   finalP2El.textContent   = p2Score;
+    if (bestScoreEl) bestScoreEl.textContent = displayBest();
+    gameOverScreen.classList.remove('hidden');
+}
+
+function updateGroupDisplay() {
+    const label = (g, name) =>
+        g === 'red' ? `🔴 ${name}` : g === 'yellow' ? `🟡 ${name}` : name;
+    if (p1LabelEl) p1LabelEl.textContent = label(p1Group, 'P1');
+    if (p2LabelEl) p2LabelEl.textContent = label(p2Group, 'P2');
+}
+
+function updateTurnIndicator() {
+    const myGroup = currentPlayer === 1 ? p1Group : p2Group;
+    const name = currentPlayer === 1 ? 'PLAYER 1' : (isVsAI ? 'AI' : 'PLAYER 2');
+    let text;
+    if (myGroup) {
+        const dot = myGroup === 'red' ? '🔴' : '🟡';
+        text = `${name} ${dot} — ${remainingFor(myGroup)} LEFT`;
+    } else {
+        text = `${name}'S TURN`;
+    }
+    turnIndicator.textContent = text;
+    turnIndicator.style.color = currentPlayer === 1 ? '#00d4ff' : '#ff9800';
+}
+
 function isTableMoving() {
     if (Math.hypot(cueBall.velocity.x, cueBall.velocity.y) > 0.1) return true;
     for (const ball of balls) {
@@ -329,16 +378,13 @@ function isTableMoving() {
 }
 
 function switchTurn() {
-    if (ballsSunkThisTurn > 0 && !isFoul) {
-        ballsSunkThisTurn = 0;
-    } else {
-        currentPlayer = currentPlayer === 1 ? 2 : 1;
-        ballsSunkThisTurn = 0;
-        isFoul = false;
+    const keepTurn = ballsSunkThisTurn > 0 && !isFoul && !turnShouldPass;
+    turnShouldPass    = false;
+    ballsSunkThisTurn = 0;
+    isFoul            = false;
 
-        turnIndicator.textContent = currentPlayer === 1 ? "PLAYER 1'S TURN" : (isVsAI ? "AI'S TURN" : "PLAYER 2'S TURN");
-        turnIndicator.style.color = currentPlayer === 1 ? "#00d4ff" : "#ff9800";
-    }
+    if (!keepTurn) currentPlayer = currentPlayer === 1 ? 2 : 1;
+    updateTurnIndicator();
 
     if (currentPlayer === 2 && isVsAI && gameRunning && !isGameOver && !gamePaused) {
         aiTimer = setTimeout(takeAITurn, 1200);
@@ -346,22 +392,69 @@ function switchTurn() {
 }
 
 // ─── Artificial Intelligence Engine ──────────────────────────────────────
+function isPathClear(x1, y1, x2, y2, ignore) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    if (len === 0) return true;
+    const ux = dx / len, uy = dy / len;
+    const blockers = [cueBall, ...balls].filter(b => b && !ignore.includes(b));
+    for (const b of blockers) {
+        const tx = b.position.x - x1, ty = b.position.y - y1;
+        const dot = tx * ux + ty * uy;
+        if (dot < 0 || dot > len) continue;
+        const px = x1 + ux * dot, py = y1 + uy * dot;
+        if (Math.hypot(b.position.x - px, b.position.y - py) < BALL_RADIUS * 2 - 1) return false;
+    }
+    return true;
+}
+
 function takeAITurn() {
-    if (balls.length === 0 || isGameOver || gamePaused) return;
+    if (isGameOver || gamePaused) return;
 
-    const targetBall  = balls[Math.floor(Math.random() * balls.length)];
-    let bestPocket    = pockets[0];
-    let minPocketDist = Infinity;
-    pockets.forEach(p => {
-        const d = Math.hypot(targetBall.position.x - p.x, targetBall.position.y - p.y);
-        if (d < minPocketDist) { minPocketDist = d; bestPocket = p; }
-    });
+    const aiGroup = p2Group;
+    let legalTargets;
+    if (aiGroup === null) {
+        legalTargets = balls.filter(b => b.group !== 'eight');
+    } else {
+        const mine = balls.filter(b => b.group === aiGroup);
+        legalTargets = mine.length ? mine : balls.filter(b => b.group === 'eight');
+    }
+    if (!legalTargets.length) return;
 
-    const angleToPocket = Math.atan2(bestPocket.y - targetBall.position.y, bestPocket.x - targetBall.position.x);
-    const ghostBallX    = targetBall.position.x - Math.cos(angleToPocket) * (BALL_RADIUS * 2);
-    const ghostBallY    = targetBall.position.y - Math.sin(angleToPocket) * (BALL_RADIUS * 2);
-    const aimAngle      = Math.atan2(ghostBallY - cueBall.position.y, ghostBallX - cueBall.position.x);
-    const speed         = 18 + (Math.random() * 8);
+    let best = null;
+    for (const ball of legalTargets) {
+        for (const p of pockets) {
+            const toPocket = Math.atan2(p.y - ball.position.y, p.x - ball.position.x);
+            const gx = ball.position.x - Math.cos(toPocket) * BALL_RADIUS * 2;
+            const gy = ball.position.y - Math.sin(toPocket) * BALL_RADIUS * 2;
+
+            if (!isPathClear(cueBall.position.x, cueBall.position.y, gx, gy, [cueBall, ball])) continue;
+            if (!isPathClear(ball.position.x, ball.position.y, p.x, p.y, [ball])) continue;
+
+            const aimAng = Math.atan2(gy - cueBall.position.y, gx - cueBall.position.x);
+            let cut = Math.abs(aimAng - toPocket);
+            if (cut > Math.PI) cut = 2 * Math.PI - cut;
+            if (cut > 1.2) continue;
+
+            const d1 = Math.hypot(gx - cueBall.position.x, gy - cueBall.position.y);
+            const d2 = Math.hypot(p.x - ball.position.x, p.y - ball.position.y);
+            const score = (Math.PI - cut) * 2 - (d1 + d2) / 400;
+            if (!best || score > best.score) best = { aimAng, d1, d2, score };
+        }
+    }
+
+    let aimAngle, speed;
+    if (best) {
+        aimAngle = best.aimAng + (Math.random() - 0.5) * 0.035;
+        const need = (best.d1 + best.d2 * 1.4) * 0.030;
+        speed = Math.min(MAX_SHOT - 4, Math.max(9, need));
+    } else {
+        const nb = legalTargets.reduce((a, b) =>
+            Math.hypot(a.position.x - cueBall.position.x, a.position.y - cueBall.position.y) <
+            Math.hypot(b.position.x - cueBall.position.x, b.position.y - cueBall.position.y) ? a : b);
+        aimAngle = Math.atan2(nb.position.y - cueBall.position.y, nb.position.x - cueBall.position.x);
+        speed = 8;
+    }
 
     scratchWarning.style.display = 'none';
     sfxCue();
@@ -459,7 +552,9 @@ function handleInputEnd() {
 
     const angle    = Math.atan2(dy, dx);
     const pullDist = Math.min(dist, MAX_PULL);
-    const speed    = pullDist * 0.22;
+    const t        = pullDist / MAX_PULL;
+    const power    = t * t * (3 - 2 * t);    // smoothstep
+    const speed    = MIN_SHOT + power * (MAX_SHOT - MIN_SHOT);
 
     sfxCue();
     Body.setVelocity(cueBall, {
@@ -478,13 +573,18 @@ function startNewGame(mode) {
     isGameOver        = false;
     gameRunning       = true;
     gamePaused        = false;
+    p1Group           = null;
+    p2Group           = null;
+    turnShouldPass    = false;
+    eightBallSunk     = false;
     clearTimeout(aiTimer);
 
     score1El.textContent          = p1Score;
     score2El.textContent          = p2Score;
-    turnIndicator.textContent     = "PLAYER 1'S TURN";
-    turnIndicator.style.color     = "#00d4ff";
+    scratchWarning.textContent    = 'SCRATCH! TURN LOST.';
     scratchWarning.style.display  = 'none';
+    updateGroupDisplay();
+    updateTurnIndicator();
 
     if (titleBestEl) titleBestEl.textContent = displayBest();
 
@@ -534,8 +634,15 @@ function gameLoop() {
         ctx.fill();
     });
 
+    // Detect cue sink before ball loop so 8-ball edge case can use it
+    let cueSunkThisShot = false;
+    pockets.forEach(p => {
+        if (Math.hypot(cueBall.position.x - p.x, cueBall.position.y - p.y) < p.r) cueSunkThisShot = true;
+    });
+
     const activeBalls = [];
     balls.forEach(ball => {
+        if (isGameOver) { activeBalls.push(ball); return; }
         let sunk = false;
         pockets.forEach(p => {
             if (Math.hypot(ball.position.x - p.x, ball.position.y - p.y) < p.r) sunk = true;
@@ -543,24 +650,47 @@ function gameLoop() {
 
         if (sunk) {
             Composite.remove(engine.world, ball);
-            ballsSunkThisTurn++;
-            if (currentPlayer === 1) p1Score++; else p2Score++;
-            score1El.textContent = p1Score;
-            score2El.textContent = p2Score;
             sfxPocket();
+
+            if (ball.group === 'eight') {
+                eightBallSunk = true;
+                const myGroup   = currentPlayer === 1 ? p1Group : p2Group;
+                const remaining = balls.filter(b => b !== ball && b.group === myGroup).length;
+                const shooterWins = myGroup !== null && remaining === 0 && !cueSunkThisShot;
+                endGame(shooterWins ? currentPlayer : (currentPlayer === 1 ? 2 : 1));
+            } else {
+                if (p1Group === null) {
+                    if (currentPlayer === 1) {
+                        p1Group = ball.group;
+                        p2Group = ball.group === 'red' ? 'yellow' : 'red';
+                    } else {
+                        p2Group = ball.group;
+                        p1Group = ball.group === 'red' ? 'yellow' : 'red';
+                    }
+                    updateGroupDisplay();
+                }
+                const myGroup = currentPlayer === 1 ? p1Group : p2Group;
+                if (ball.group === myGroup) {
+                    if (currentPlayer === 1) p1Score++; else p2Score++;
+                    ballsSunkThisTurn++;
+                } else {
+                    if (currentPlayer === 1) p2Score++; else p1Score++;
+                    turnShouldPass = true;
+                    scratchWarning.textContent = 'WRONG COLOR! TURN LOST.';
+                    scratchWarning.style.display = 'inline';
+                }
+                score1El.textContent = p1Score;
+                score2El.textContent = p2Score;
+            }
         } else {
             activeBalls.push(ball);
         }
     });
     balls = activeBalls;
 
-    let cueSunk = false;
-    pockets.forEach(p => {
-        if (Math.hypot(cueBall.position.x - p.x, cueBall.position.y - p.y) < p.r) cueSunk = true;
-    });
-
-    if (cueSunk) {
+    if (cueSunkThisShot && !eightBallSunk) {
         isFoul = true;
+        scratchWarning.textContent = 'SCRATCH! TURN LOST.';
         scratchWarning.style.display = 'inline';
         Body.setVelocity(cueBall, { x: 0, y: 0 });
         if (canvas.height > canvas.width) {
@@ -621,15 +751,33 @@ function gameLoop() {
 
             const stickLength = 350;
             const stickThick  = 7;
-            const offset      = BALL_RADIUS + 5 + pullDist;
+            const stickGap    = BALL_RADIUS + 6 + pullDist * 0.45;
 
             ctx.fillStyle = '#5c3a21';
-            ctx.fillRect(offset + 15, -stickThick / 2, stickLength, stickThick);
+            ctx.fillRect(stickGap + 15, -stickThick / 2, stickLength, stickThick);
             ctx.fillStyle = '#e6c280';
-            ctx.fillRect(offset + 4,  -stickThick / 2, 15,          stickThick);
+            ctx.fillRect(stickGap + 4,  -stickThick / 2, 15,          stickThick);
             ctx.fillStyle = '#00bcd4';
-            ctx.fillRect(offset,       -stickThick / 2, 4,           stickThick);
+            ctx.fillRect(stickGap,       -stickThick / 2, 4,           stickThick);
             ctx.restore();
+
+            // Power meter (screen-space, arcade style)
+            const pt = pullDist / MAX_PULL;
+            const meterW = 18, meterH = canvas.height * 0.4;
+            const mx = canvas.width - meterW - 14;
+            const my = (canvas.height - meterH) / 2;
+            ctx.fillStyle = 'rgba(0,0,0,0.45)';
+            ctx.fillRect(mx - 4, my - 4, meterW + 8, meterH + 8);
+            const grad = ctx.createLinearGradient(0, my + meterH, 0, my);
+            grad.addColorStop(0,   '#3DC46A');
+            grad.addColorStop(0.6, '#F5C200');
+            grad.addColorStop(1,   '#E84040');
+            ctx.fillStyle = grad;
+            const fillH = meterH * (pt * pt * (3 - 2 * pt));
+            ctx.fillRect(mx, my + meterH - fillH, meterW, fillH);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(mx, my, meterW, meterH);
         }
     }
 
@@ -640,29 +788,6 @@ function gameLoop() {
 
     drawCircle(cueBall.position.x, cueBall.position.y, BALL_RADIUS, cueBall.color);
     drawCircle(cueBall.position.x - 3, cueBall.position.y - 3, 3, 'rgba(255,255,255,0.6)');
-
-    if (balls.length === 0 && !isTableMoving()) {
-        isGameOver  = true;
-        gameRunning = false;
-        clearTimeout(aiTimer);
-
-        let winnerMsg = "";
-        if (p1Score > p2Score) {
-            winnerMsg = "PLAYER 1 WINS!";
-            saveBest();
-            sfxWin();
-        } else if (p2Score > p1Score) {
-            winnerMsg = isVsAI ? "AI WINS!" : "PLAYER 2 WINS!";
-        } else {
-            winnerMsg = "IT'S A TIE!";
-        }
-
-        winnerText.textContent   = winnerMsg;
-        if (finalP1El)  finalP1El.textContent  = p1Score;
-        if (finalP2El)  finalP2El.textContent  = p2Score;
-        if (bestScoreEl) bestScoreEl.textContent = displayBest();
-        gameOverScreen.classList.remove('hidden');
-    }
 
     if (gameRunning) requestAnimationFrame(gameLoop);
 }
@@ -683,6 +808,8 @@ document.addEventListener('DOMContentLoaded', () => {
     titleBestEl     = document.getElementById('title-best');
     finalP1El       = document.getElementById('final-p1');
     finalP2El       = document.getElementById('final-p2');
+    p1LabelEl       = document.getElementById('p1-label');
+    p2LabelEl       = document.getElementById('p2-label');
 
     if (titleBestEl) titleBestEl.textContent = displayBest();
 
