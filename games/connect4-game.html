@@ -113,29 +113,22 @@
     /* Board wrapper */
     #board-wrap {
       position:relative;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
     }
 
     /* Preview row */
     #preview-row {
       display:grid;
       gap:6px;
-      margin-bottom:4px;
+      margin-bottom:2px;
     }
     .preview-cell {
       display:flex; align-items:center; justify-content:center;
-      cursor:pointer;
+      height:20px; cursor:pointer;
     }
-    .preview-disc {
-      width:0; height:0;
-      border-radius:50%;
-      transition:width 0.1s, height 0.1s;
-    }
-    .preview-cell:hover .preview-disc {
-      width:calc(var(--cs) * 0.55);
-      height:calc(var(--cs) * 0.55);
+    .preview-arrow {
+      font-size:14px; line-height:1;
+      opacity:0;
+      transition:opacity 0.1s, color 0.1s;
     }
 
     /* Board */
@@ -312,8 +305,8 @@
 
     <div id="turn-indicator">Red's Turn</div>
 
+    <div id="preview-row"></div>
     <div id="board-wrap">
-      <div id="preview-row"></div>
       <div id="board"></div>
       <!-- column overlays injected by JS -->
     </div>
@@ -404,11 +397,11 @@
     for (let c = 0; c < COLS; c++) {
       const cell = document.createElement('div');
       cell.className = 'preview-cell';
-      cell.style.setProperty('--cs', cellSize + 'px');
-      const disc = document.createElement('div');
-      disc.className = 'preview-disc';
-      disc.id = `prev-${c}`;
-      cell.appendChild(disc);
+      const arrow = document.createElement('span');
+      arrow.className = 'preview-arrow';
+      arrow.id = `prev-${c}`;
+      arrow.textContent = '▼';
+      cell.appendChild(arrow);
       previewEl.appendChild(cell);
     }
 
@@ -432,7 +425,7 @@
       ov.className = 'col-overlay';
       ov.style.left   = (8 + c * (cellSize + 6)) + 'px';
       ov.style.width  = cellSize + 'px';
-      ov.style.top    = (previewEl.offsetHeight + 4) + 'px';
+      ov.style.top    = '0px';
       ov.style.height = (ROWS * (cellSize + 6) + 8) + 'px';
       ov.dataset.col  = c;
       ov.addEventListener('mouseenter', () => setHover(c));
@@ -463,12 +456,8 @@
     for (let c = 0; c < COLS; c++) {
       const el = document.getElementById(`prev-${c}`);
       if (!el) continue;
-      el.style.width  = (c === col) ? (cellSize * 0.55 + 'px') : '0';
-      el.style.height = (c === col) ? (cellSize * 0.55 + 'px') : '0';
-      el.style.background = currentPlayer === 'r'
-        ? 'radial-gradient(circle at 38% 32%, #ff9090, #E84040 55%)'
-        : 'radial-gradient(circle at 38% 32%, #fff2a0, #F5C200 55%)';
-      el.style.opacity = '0.7';
+      el.style.opacity = (c === col) ? '0.85' : '0';
+      el.style.color = currentPlayer === 'r' ? '#E84040' : '#F5C200';
     }
     // Highlight column slots
     document.querySelectorAll('.slot').forEach(s => {
