@@ -120,9 +120,17 @@ function goToTitleScreen() {
 }
 
 // ─── Responsive Canvas Dimensions ────────────────────────────────────────
-const GAME_WIDTH  = 1400;
-const GAME_HEIGHT = 700;
-const ASPECT      = GAME_WIDTH / GAME_HEIGHT;
+const TABLE_LONG  = 1400;
+const TABLE_SHORT = 700;
+
+function isPortraitView() {
+    return window.innerHeight > window.innerWidth;
+}
+function gameDims() {
+    return isPortraitView()
+        ? { w: TABLE_SHORT, h: TABLE_LONG }
+        : { w: TABLE_LONG,  h: TABLE_SHORT };
+}
 
 // ─── Matter.js Aliases ────────────────────────────────────────────────────
 const Engine    = Matter.Engine,
@@ -164,9 +172,8 @@ function initPhysics() {
     engine.gravity.y = 0;
 }
 
-function buildTable() {
-    Composite.clear(engine.world);
-    balls = [];
+function rebuildStaticBodies() {
+    walls.forEach(w => Composite.remove(engine.world, w));
     walls = [];
     pockets = [];
 
@@ -177,18 +184,40 @@ function buildTable() {
     const wallThick = 50;
 
     walls.push(
-        Bodies.rectangle(w/2, -wallThick/2,   w,       wallThick, wallOptions),
-        Bodies.rectangle(w/2, h + wallThick/2, w,       wallThick, wallOptions),
-        Bodies.rectangle(-wallThick/2,  h/2,   wallThick, h,       wallOptions),
-        Bodies.rectangle(w + wallThick/2, h/2,  wallThick, h,       wallOptions)
+        Bodies.rectangle(w/2, -wallThick/2,   w,         wallThick, wallOptions),
+        Bodies.rectangle(w/2, h + wallThick/2, w,         wallThick, wallOptions),
+        Bodies.rectangle(-wallThick/2,  h/2,   wallThick, h,         wallOptions),
+        Bodies.rectangle(w + wallThick/2, h/2,  wallThick, h,         wallOptions)
     );
     Composite.add(engine.world, walls);
 
     const pRad = 24;
-    pockets = [
-        { x: 0,   y: 0, r: pRad }, { x: w/2, y: 0, r: pRad }, { x: w,   y: 0, r: pRad },
-        { x: 0,   y: h, r: pRad }, { x: w/2, y: h, r: pRad }, { x: w,   y: h, r: pRad }
-    ];
+    if (h > w) {
+        // PORTRAIT: long rails are left/right — mid pockets there
+        pockets = [
+            { x: 0, y: 0,   r: pRad }, { x: w, y: 0,   r: pRad },
+            { x: 0, y: h/2, r: pRad }, { x: w, y: h/2, r: pRad },
+            { x: 0, y: h,   r: pRad }, { x: w, y: h,   r: pRad }
+        ];
+    } else {
+        // LANDSCAPE: long rails are top/bottom
+        pockets = [
+            { x: 0, y: 0, r: pRad }, { x: w/2, y: 0, r: pRad }, { x: w, y: 0, r: pRad },
+            { x: 0, y: h, r: pRad }, { x: w/2, y: h, r: pRad }, { x: w, y: h, r: pRad }
+        ];
+    }
+}
+
+function buildTable() {
+    Composite.clear(engine.world);
+    balls = [];
+    walls = [];
+    pockets = [];
+
+    rebuildStaticBodies();
+
+    const w = canvas.width;
+    const h = canvas.height;
 
     const ballOptions = {
         restitution: 0.92,
@@ -198,69 +227,96 @@ function buildTable() {
         slop: 0.05
     };
 
-    cueBall = Bodies.circle(w * 0.25, h * 0.5, BALL_RADIUS, ballOptions);
+    if (h > w) {
+        cueBall = Bodies.circle(w * 0.5, h * 0.75, BALL_RADIUS, ballOptions);
+    } else {
+        cueBall = Bodies.circle(w * 0.25, h * 0.5, BALL_RADIUS, ballOptions);
+    }
     cueBall.isCue = true;
     cueBall.color = '#ffffff';
     Composite.add(engine.world, cueBall);
 
-    const startX = w * 0.65;
-    const startY = h * 0.5;
-    const stepX  = BALL_RADIUS * Math.sqrt(3) + 1;
-    const stepY  = BALL_RADIUS * 2 + 1;
-
+    const step  = BALL_RADIUS * Math.sqrt(3) + 1;
+    const cross = BALL_RADIUS * 2 + 1;
     let colorAlt = true;
-    for (let col = 0; col < 5; col++) {
-        for (let row = 0; row <= col; row++) {
-            const bx = startX + (col * stepX);
-            const by = startY - (col * stepY / 2) + (row * stepY);
-            const isEight = (col === 2 && row === 1);
 
-            const ball = Bodies.circle(bx, by, BALL_RADIUS, ballOptions);
-            ball.color = isEight ? '#111' : (colorAlt ? '#f44336' : '#ffeb3b');
-            colorAlt = !colorAlt;
-            balls.push(ball);
+    if (h > w) {
+        // Triangle grows upward from apex at h*0.35
+        const startX = w * 0.5;
+        const startY = h * 0.35;
+        for (let col = 0; col < 5; col++) {
+            for (let row = 0; row <= col; row++) {
+                const by = startY - (col * step);
+                const bx = startX - (col * cross / 2) + (row * cross);
+                const isEight = (col === 2 && row === 1);
+                const ball = Bodies.circle(bx, by, BALL_RADIUS, ballOptions);
+                ball.color = isEight ? '#111' : (colorAlt ? '#f44336' : '#ffeb3b');
+                colorAlt = !colorAlt;
+                balls.push(ball);
+            }
+        }
+    } else {
+        const startX = w * 0.65, startY = h * 0.5;
+        for (let col = 0; col < 5; col++) {
+            for (let row = 0; row <= col; row++) {
+                const bx = startX + (col * step);
+                const by = startY - (col * cross / 2) + (row * cross);
+                const isEight = (col === 2 && row === 1);
+                const ball = Bodies.circle(bx, by, BALL_RADIUS, ballOptions);
+                ball.color = isEight ? '#111' : (colorAlt ? '#f44336' : '#ffeb3b');
+                colorAlt = !colorAlt;
+                balls.push(ball);
+            }
         }
     }
     Composite.add(engine.world, balls);
 }
 
-function checkOrientation() {
-    const warning = document.getElementById('orientation-warning');
-    if (!warning) return;
-    const isMobile  = window.innerWidth < 768;
-    const isPortrait = window.innerHeight > window.innerWidth;
-    warning.style.display = (isMobile && isPortrait) ? 'flex' : 'none';
+function transposeWorld() {
+    const w = canvas.width, h = canvas.height;
+    const ow = h, oh = w;
+    const all = [cueBall, ...balls].filter(Boolean);
+    all.forEach(b => {
+        const fx = b.position.x / ow;
+        const fy = b.position.y / oh;
+        Body.setPosition(b, { x: fy * w, y: fx * h });
+        Body.setVelocity(b, { x: b.velocity.y, y: b.velocity.x });
+    });
+    rebuildStaticBodies();
 }
 
 function resizeCanvas() {
     if (!canvas) return;
-    const winW = window.innerWidth;
-    const winH = window.innerHeight;
-    const GAME_W = 1400;
-    const GAME_H = 700;
+    const d = gameDims();
 
-    let dispW, dispH, left, top;
-
-    if (winH > winW) {
-        // PORTRAIT — scale to fill width
-        dispW = winW;
-        dispH = Math.floor(winW * (GAME_H / GAME_W));
-        left  = 0;
-        top   = Math.floor((winH - dispH) / 2);
-    } else {
-        // LANDSCAPE — normal fit
-        const scale = Math.min(winW / GAME_W, winH / GAME_H);
-        dispW = Math.floor(GAME_W * scale);
-        dispH = Math.floor(GAME_H * scale);
-        left  = Math.floor((winW - dispW) / 2);
-        top   = Math.floor((winH - dispH) / 2);
+    if (canvas.width !== d.w) {
+        canvas.width  = d.w;
+        canvas.height = d.h;
+        if (gameRunning && !isGameOver) {
+            transposeWorld();
+        } else {
+            buildTable();
+        }
     }
 
+    const winW = window.innerWidth;
+    const winH = window.innerHeight;
+    const topReserve  = 96;
+    const botReserve  = 12;
+    const sideReserve = 8;
+
+    const availW = winW - sideReserve * 2;
+    const availH = winH - topReserve - botReserve;
+    const scale  = Math.min(availW / d.w, availH / d.h);
+
+    const dispW = Math.floor(d.w * scale);
+    const dispH = Math.floor(d.h * scale);
+
+    canvas.style.position = 'fixed';
     canvas.style.width    = dispW + 'px';
     canvas.style.height   = dispH + 'px';
-    canvas.style.position = 'fixed';
-    canvas.style.left     = left + 'px';
-    canvas.style.top      = top  + 'px';
+    canvas.style.left     = Math.floor((winW - dispW) / 2) + 'px';
+    canvas.style.top      = (topReserve + Math.floor((availH - dispH) / 2)) + 'px';
 }
 
 // ─── Game Logic & Turn Management ────────────────────────────────────────
@@ -372,8 +428,8 @@ function getMousePos(e) {
     const rect    = canvas.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const scaleX  = GAME_WIDTH  / rect.width;
-    const scaleY  = GAME_HEIGHT / rect.height;
+    const scaleX  = canvas.width  / rect.width;
+    const scaleY  = canvas.height / rect.height;
     return {
         x: (clientX - rect.left) * scaleX,
         y: (clientY - rect.top)  * scaleY
@@ -467,12 +523,15 @@ function gameLoop() {
     }
 
     pockets.forEach(p => {
-        drawCircle(p.x, p.y, p.r, '#050a05');
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r + 4, 0, Math.PI * 2);
-        ctx.strokeStyle = '#278f46';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#F5C200';
+        ctx.lineWidth = 4;
         ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = '#000';
+        ctx.fill();
     });
 
     const activeBalls = [];
@@ -504,7 +563,11 @@ function gameLoop() {
         isFoul = true;
         scratchWarning.style.display = 'inline';
         Body.setVelocity(cueBall, { x: 0, y: 0 });
-        Body.setPosition(cueBall, { x: canvas.width * 0.25, y: canvas.height * 0.5 });
+        if (canvas.height > canvas.width) {
+            Body.setPosition(cueBall, { x: canvas.width * 0.5, y: canvas.height * 0.75 });
+        } else {
+            Body.setPosition(cueBall, { x: canvas.width * 0.25, y: canvas.height * 0.5 });
+        }
         sfxScratch();
     }
 
@@ -623,15 +686,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (titleBestEl) titleBestEl.textContent = displayBest();
 
-    canvas.width  = GAME_WIDTH;
-    canvas.height = GAME_HEIGHT;
+    const d = gameDims();
+    canvas.width  = d.w;
+    canvas.height = d.h;
 
     const modeButtons = document.querySelectorAll('.btn-group .menu-btn');
 
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('orientationchange', resizeCanvas);
-    window.addEventListener('resize', checkOrientation);
-    window.addEventListener('orientationchange', checkOrientation);
 
     document.getElementById('pause-btn').addEventListener('click', togglePause);
     window.addEventListener('keydown', (e) => {
@@ -678,5 +740,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     resizeCanvas();
-    checkOrientation();
 });
