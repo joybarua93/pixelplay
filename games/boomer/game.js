@@ -109,9 +109,8 @@ function goToTitleScreen() {
 }
 
 // ─── Responsive Canvas Dimensions ────────────────────────────────────────
-const GAME_WIDTH  = 800;
-const GAME_HEIGHT = 600;
-const ASPECT      = GAME_WIDTH / GAME_HEIGHT;
+const GAME_WIDTH  = 400;
+const GAME_HEIGHT = 700;
 
 // ─── DOM References ───────────────────────────────────────────────────────
 let canvas, ctx, scoreEl, livesEl, finalScoreEl, bestScoreEl, titleBestEl,
@@ -127,51 +126,29 @@ let lastDropTime = 0;
 let currentDifficulty = 'medium';
 
 const difficultySettings = {
-    easy:   { bucketWidth: 100, bombSpeed: 3, bomberSpeed: 3, dropRate: 1200, erraticness: 0.02, scoreMultiplier: 1 },
-    medium: { bucketWidth: 75,  bombSpeed: 5, bomberSpeed: 5, dropRate: 800,  erraticness: 0.05, scoreMultiplier: 2 },
-    hard:   { bucketWidth: 50,  bombSpeed: 8, bomberSpeed: 7, dropRate: 500,  erraticness: 0.1,  scoreMultiplier: 3 }
+    easy:   { bucketWidth: 90,  bombSpeed: 2.5, bomberSpeed: 4,  dropRate: 1400, erraticness: 0.02, scoreMultiplier: 1 },
+    medium: { bucketWidth: 65,  bombSpeed: 4,   bomberSpeed: 6,  dropRate: 900,  erraticness: 0.05, scoreMultiplier: 2 },
+    hard:   { bucketWidth: 45,  bombSpeed: 7,   bomberSpeed: 9,  dropRate: 500,  erraticness: 0.1,  scoreMultiplier: 3 }
 };
 
 const player = { x: 0, y: 0, width: 75, height: 25 };
 const bomber = { x: 0, y: 20, width: 60, height: 40, direction: 1, speed: 5 };
 
-function checkOrientation() {
-    const warning = document.getElementById('orientation-warning');
-    if (!warning) return;
-    const isMobile   = window.innerWidth < 768;
-    const isPortrait = window.innerHeight > window.innerWidth;
-    warning.style.display = (isMobile && isPortrait) ? 'flex' : 'none';
-}
-
 function resizeCanvas() {
     if (!canvas) return;
-    const winW   = window.innerWidth;
-    const winH   = window.innerHeight;
-    const GAME_W = 800;
-    const GAME_H = 600;
+    const winW = window.innerWidth;
+    const winH = window.innerHeight;
 
-    let dispW, dispH, left, top;
-
-    if (winH > winW) {
-        // PORTRAIT — fit to screen width, center vertically
-        dispW = winW;
-        dispH = Math.floor(winW * (GAME_H / GAME_W));
-        left  = 0;
-        top   = Math.floor((winH - dispH) / 2);
-    } else {
-        // LANDSCAPE — fill as much as possible
-        const scale = Math.min(winW / GAME_W, winH / GAME_H);
-        dispW = Math.floor(GAME_W * scale);
-        dispH = Math.floor(GAME_H * scale);
-        left  = Math.floor((winW - dispW) / 2);
-        top   = Math.floor((winH - dispH) / 2);
-    }
+    const scale = Math.min(winW / GAME_WIDTH, winH / GAME_HEIGHT);
+    const dispW = Math.floor(GAME_WIDTH  * scale);
+    const dispH = Math.floor(GAME_HEIGHT * scale);
 
     canvas.style.width    = dispW + 'px';
     canvas.style.height   = dispH + 'px';
     canvas.style.position = 'fixed';
-    canvas.style.left     = left + 'px';
-    canvas.style.top      = top  + 'px';
+    canvas.style.left     = Math.floor((winW - dispW) / 2) + 'px';
+    canvas.style.top      = Math.floor((winH - dispH) / 2) + 'px';
+
     player.y = GAME_HEIGHT - 40;
     if (!gameRunning) player.x = (GAME_WIDTH - player.width) / 2;
 }
@@ -190,22 +167,44 @@ class Bomb {
     constructor(x, speed) {
         this.x = x;
         this.y = bomber.y + bomber.height;
-        this.radius = 8;
+        this.radius = 10;
         this.speed = speed + (Math.random() * 2);
         this.isCaught = false;
     }
     update() { this.y += this.speed; }
     draw() {
+        // Glow effect
+        ctx.save();
+        ctx.shadowColor = '#F97316';
+        ctx.shadowBlur  = 16;
+
+        // Bomb body — bright orange
         ctx.beginPath();
-        ctx.fillStyle = '#222';
+        ctx.fillStyle = '#F97316';
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
+
+        // Dark center for depth
         ctx.beginPath();
-        ctx.strokeStyle = '#ff9800';
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.arc(this.x - 2, this.y - 2, this.radius * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        // Fuse — bright yellow
+        ctx.beginPath();
+        ctx.strokeStyle = '#F5C200';
         ctx.lineWidth = 2;
         ctx.moveTo(this.x, this.y - this.radius);
-        ctx.lineTo(this.x + 4, this.y - this.radius - 6);
+        ctx.lineTo(this.x + 4, this.y - this.radius - 8);
         ctx.stroke();
+
+        // Fuse spark
+        ctx.beginPath();
+        ctx.fillStyle = '#fff';
+        ctx.arc(this.x + 4, this.y - this.radius - 8, 2, 0, Math.PI * 2);
+        ctx.fill();
     }
 }
 
@@ -355,8 +354,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('orientationchange', resizeCanvas);
-    window.addEventListener('resize', checkOrientation);
-    window.addEventListener('orientationchange', checkOrientation);
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && gameRunning && !isGameOver) togglePause();
     });
@@ -382,5 +379,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     resizeCanvas();
-    checkOrientation();
 });

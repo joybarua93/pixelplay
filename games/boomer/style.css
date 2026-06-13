@@ -36,15 +36,16 @@ body {
 
 #score-board {
     position: absolute;
-    top: 20px;
-    left: 20px;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
     color: #F97316;
-    font-size: 20px;
+    font-size: 18px;
     font-family: 'Lilita One', sans-serif;
     letter-spacing: 1px;
     z-index: 5;
-    display: block;
-    image-rendering: pixelated;
+    white-space: nowrap;
 }
 
 .menu-screen {
