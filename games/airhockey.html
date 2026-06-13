@@ -47,6 +47,18 @@
 </head>
 <body>
 <div id="start-screen">
+  <a id="pp-back" href="../index.html" style="
+    position:fixed;top:14px;left:14px;z-index:2147483647;
+    display:flex;align-items:center;gap:6px;
+    padding:8px 16px 8px 12px;
+    background:#2A3660;color:#fff;
+    font-family:'Lilita One',Arial,sans-serif;font-size:15px;
+    text-decoration:none;border-radius:50px;
+    border:2px solid rgba(255,255,255,0.25);
+    box-shadow:0 2px 12px rgba(0,0,0,0.4),3px 3px 0 #1D284A;
+    letter-spacing:0.3px;-webkit-tap-highlight-color:transparent;">
+    ← PixelPlay
+  </a>
   <div class="start-emoji">🏒</div>
   <h1 class="start-title">Air Hockey</h1>
   <p class="start-sub">First to 7 goals wins</p>
@@ -71,7 +83,7 @@
 
 <div id="game-screen">
   <div class="top-bar">
-    <a href="../index.html" class="back-btn">← Back</a>
+    <div style="min-width:64px;"></div>
     <span class="top-title">AIR HOCKEY</span>
     <span class="mode-badge" id="mode-badge">🤖 vs AI</span>
   </div>
@@ -81,7 +93,6 @@
   <div class="bottom-bar">
     <span class="bottom-score" id="btm-score">P1: 0 — P2: 0</span>
     <button class="btn-bottom btn-restart" id="restart-btn">↺ Restart</button>
-    <a href="../index.html" class="btn-bottom btn-home">🏠 Home</a>
   </div>
 </div>
 
@@ -90,6 +101,15 @@
   <div class="ov-title" id="ov-title">You Win!</div>
   <div class="ov-sub"   id="ov-sub">7 — 4</div>
   <button class="btn-again" id="btn-again">Play Again</button>
+  <a href="../index.html" style="
+      font-family:'Lilita One',Arial,sans-serif;font-size:17px;
+      background:#2A3660;color:#fff;
+      border:3px solid #1D284A;border-radius:14px;
+      padding:13px 0;width:220px;cursor:pointer;
+      box-shadow:3px 3px 0 #1D284A;
+      -webkit-tap-highlight-color:transparent;
+      display:block;text-decoration:none;text-align:center;
+      box-sizing:border-box;margin-top:4px;">← PixelPlay</a>
 </div>
 
 <script>
@@ -123,6 +143,8 @@ document.getElementById('btn-again').addEventListener('click',()=>{document.getE
 
 function startGame(){
   document.getElementById('start-screen').style.display='none';
+  document.getElementById('pp-back').style.display='none';
+  document.getElementById('pause-btn').style.display='flex';
   const gs=document.getElementById('game-screen');
   gs.style.display='flex';gs.style.flexDirection='column';
   document.getElementById('mode-badge').textContent=mode==='ai'?'🤖 vs AI':'👥 2P';
@@ -428,7 +450,89 @@ function endGame(winner){
   document.getElementById('ov-sub').textContent=`${scores.p1} — ${scores.p2}`;
   document.getElementById('overlay').classList.add('show');
 }
+
+let manualPaused=false;
+
+window.togglePause=function(){
+  manualPaused=!manualPaused;
+  document.getElementById('pause-overlay').style.display=manualPaused?'flex':'none';
+  document.getElementById('pause-btn').innerHTML=manualPaused?'▶':'⏸';
+  paused=manualPaused;
+  if(!manualPaused&&!gameOver) requestAnimationFrame(loop);
+};
+
+window.restartFromPause=function(){
+  manualPaused=false;
+  document.getElementById('pause-overlay').style.display='none';
+  document.getElementById('pause-btn').innerHTML='⏸';
+  paused=false;
+  scores={p1:0,p2:0};
+  initGame();
+};
+
+window.goToTitleFromPause=function(){
+  manualPaused=false;
+  paused=false;
+  gameOver=true;
+  cancelAnimationFrame(raf);
+  document.getElementById('pause-overlay').style.display='none';
+  document.getElementById('pause-btn').style.display='none';
+  document.getElementById('game-screen').style.display='none';
+  document.getElementById('start-screen').style.display='flex';
+  document.getElementById('pp-back').style.display='flex';
+};
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape') window.togglePause();});
 })();
 </script>
+
+<button id="pause-btn" onclick="togglePause()" style="
+    position:fixed;top:6px;right:14px;z-index:2147483647;
+    width:40px;height:40px;
+    background:rgba(42,54,96,0.85);color:#fff;
+    font-size:18px;border:2px solid rgba(255,255,255,0.25);
+    border-radius:50%;cursor:pointer;
+    display:none;align-items:center;justify-content:center;
+    box-shadow:0 2px 8px rgba(0,0,0,0.4);
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;">⏸</button>
+
+<div id="pause-overlay" style="
+    display:none;position:fixed;inset:0;z-index:2147483646;
+    background:rgba(3,14,31,0.92);backdrop-filter:blur(6px);
+    flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;font-family:'Lilita One',Arial,sans-serif;">
+  <div style="font-size:32px;color:#2f9fe6;margin-bottom:8px;letter-spacing:1px;">⏸ PAUSED</div>
+  <button onclick="togglePause()" style="
+      font-family:'Lilita One',Arial,sans-serif;font-size:17px;
+      background:#3DC46A;color:#1D284A;
+      border:3px solid #1D284A;border-radius:14px;
+      padding:13px 0;width:220px;cursor:pointer;
+      box-shadow:3px 3px 0 #1D284A;
+      -webkit-tap-highlight-color:transparent;">▶ Resume</button>
+  <button onclick="restartFromPause()" style="
+      font-family:'Lilita One',Arial,sans-serif;font-size:17px;
+      background:#2A3660;color:#fff;
+      border:3px solid #1D284A;border-radius:14px;
+      padding:13px 0;width:220px;cursor:pointer;
+      box-shadow:3px 3px 0 #1D284A;
+      -webkit-tap-highlight-color:transparent;">↺ Restart</button>
+  <button onclick="goToTitleFromPause()" style="
+      font-family:'Lilita One',Arial,sans-serif;font-size:17px;
+      background:#2A3660;color:#fff;
+      border:3px solid #1D284A;border-radius:14px;
+      padding:13px 0;width:220px;cursor:pointer;
+      box-shadow:3px 3px 0 #1D284A;
+      -webkit-tap-highlight-color:transparent;">☰ Title Screen</button>
+  <a href="../index.html" style="
+      font-family:'Lilita One',Arial,sans-serif;font-size:17px;
+      background:#2A3660;color:#fff;
+      border:3px solid #1D284A;border-radius:14px;
+      padding:13px 0;width:220px;cursor:pointer;
+      box-shadow:3px 3px 0 #1D284A;
+      -webkit-tap-highlight-color:transparent;
+      display:block;text-decoration:none;text-align:center;
+      box-sizing:border-box;">← PixelPlay</a>
+</div>
 </body>
 </html>
