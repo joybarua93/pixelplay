@@ -70,10 +70,6 @@ function sfxWin()   {
         setTimeout(() => SFX.play({ frequency: f, type: 'sine', duration: 0.18, volume: 0.3 }), i * 90));
 }
 
-// ─── Responsive Canvas Dimensions ────────────────────────────────────────
-const GAME_WIDTH  = 800;
-const GAME_HEIGHT = 600;
-const ASPECT      = GAME_WIDTH / GAME_HEIGHT;
 
 // ─── Matter.js Aliases ────────────────────────────────────────────────────
 const Engine    = Matter.Engine;
@@ -97,7 +93,7 @@ function togglePause() {
     if (gamePaused) {
         isAiming = false;
         const info = document.getElementById('pause-info');
-        if (info) info.textContent = `Hole ${currentHoleIndex + 1} / 9  •  Strokes: ${totalStrokes}`;
+        if (info) info.textContent = `Hole ${currentHoleIndex + 1} / ${TOTAL_HOLES}  •  Strokes: ${totalStrokes}`;
     } else {
         resumeGameLoop();
     }
@@ -124,7 +120,7 @@ let canvas, ctx, scoreEl, holeEl, startMenu, gameOverScreen, restartBtn, finalSc
 let engine;
 
 // ─── Game State ───────────────────────────────────────────────────────────
-const TOTAL_HOLES = 9;
+const TOTAL_HOLES = 18;
 let totalStrokes    = 0;
 let currentHoleIndex = 0;
 let isGameOver      = false;
@@ -139,7 +135,7 @@ const BALL_RADIUS = 8;
 
 let isAiming    = false;
 let dragCurrent = { x: 0, y: 0 };
-const MAX_PULL  = 150;
+const MAX_PULL  = 260;
 
 function buildLevel(index) {
     Composite.clear(engine.world);
@@ -221,11 +217,86 @@ function buildLevel(index) {
         walls.push(Bodies.rectangle(w * 0.5, h * 0.38, w * 0.5, 20, wallOpts));
         sandTraps.push({ x: w * 0.38, y: h * 0.65, w: w * 0.4, h: h * 0.12 });
     }
+    else if (index === 9) {
+        // Hole 10: The Pinball — three bumpers in a triangle
+        startPos = { x: w * 0.5, y: h * 0.88 };
+        hole = { x: w * 0.5, y: h * 0.12, r: 16 };
+        bumpers.push(Bodies.circle(w * 0.5,  h * 0.45, 28, bumperOpts));
+        bumpers.push(Bodies.circle(w * 0.28, h * 0.62, 22, bumperOpts));
+        bumpers.push(Bodies.circle(w * 0.72, h * 0.62, 22, bumperOpts));
+    }
+    else if (index === 10) {
+        // Hole 11: The Corridor — tight channel, hole at far end
+        startPos = { x: w * 0.5, y: h * 0.88 };
+        hole = { x: w * 0.5, y: h * 0.12, r: 16 };
+        walls.push(Bodies.rectangle(w * 0.25, h * 0.5, 20, h * 0.7, wallOpts));
+        walls.push(Bodies.rectangle(w * 0.75, h * 0.5, 20, h * 0.7, wallOpts));
+    }
+    else if (index === 11) {
+        // Hole 12: The Ricochet — bank off right wall to reach top-left hole
+        startPos = { x: w * 0.2, y: h * 0.88 };
+        hole = { x: w * 0.2, y: h * 0.12, r: 16 };
+        walls.push(Bodies.rectangle(w * 0.6, h * 0.5, 20, h * 0.5, wallOpts));
+        sandTraps.push({ x: w * 0.25, y: h * 0.5, w: w * 0.35, h: h * 0.15 });
+    }
+    else if (index === 12) {
+        // Hole 13: Double Bumper Gates — bumpers form two gates to thread
+        startPos = { x: w * 0.5, y: h * 0.88 };
+        hole = { x: w * 0.5, y: h * 0.12, r: 16 };
+        bumpers.push(Bodies.circle(w * 0.28, h * 0.65, 24, bumperOpts));
+        bumpers.push(Bodies.circle(w * 0.72, h * 0.65, 24, bumperOpts));
+        bumpers.push(Bodies.circle(w * 0.28, h * 0.38, 24, bumperOpts));
+        bumpers.push(Bodies.circle(w * 0.72, h * 0.38, 24, bumperOpts));
+    }
+    else if (index === 13) {
+        // Hole 14: The Maze — two walls create a Z-shaped path
+        startPos = { x: w * 0.15, y: h * 0.85 };
+        hole = { x: w * 0.85, y: h * 0.15, r: 16 };
+        walls.push(Bodies.rectangle(w * 0.35, h * 0.62, w * 0.7, 18, wallOpts));
+        walls.push(Bodies.rectangle(w * 0.65, h * 0.38, w * 0.7, 18, wallOpts));
+    }
+    else if (index === 14) {
+        // Hole 15: Sand Gauntlet — wide sand trap with bumper guards
+        startPos = { x: w * 0.5, y: h * 0.88 };
+        hole = { x: w * 0.5, y: h * 0.12, r: 16 };
+        sandTraps.push({ x: w * 0.5, y: h * 0.5, w: w * 0.7, h: h * 0.18 });
+        bumpers.push(Bodies.circle(w * 0.2, h * 0.5, 20, bumperOpts));
+        bumpers.push(Bodies.circle(w * 0.8, h * 0.5, 20, bumperOpts));
+    }
+    else if (index === 15) {
+        // Hole 16: The Spiral — walls create a narrowing target zone
+        startPos = { x: w * 0.5, y: h * 0.88 };
+        hole = { x: w * 0.5, y: h * 0.12, r: 16 };
+        walls.push(Bodies.rectangle(w * 0.5,  h * 0.72, w * 0.8, 18, wallOpts));
+        walls.push(Bodies.rectangle(w * 0.3,  h * 0.55, 18, h * 0.35, wallOpts));
+        walls.push(Bodies.rectangle(w * 0.7,  h * 0.55, 18, h * 0.35, wallOpts));
+        walls.push(Bodies.rectangle(w * 0.5,  h * 0.38, w * 0.4, 18, wallOpts));
+    }
+    else if (index === 16) {
+        // Hole 17: Bumper Storm — 5 bumpers scattered, open hole
+        startPos = { x: w * 0.5, y: h * 0.88 };
+        hole = { x: w * 0.5, y: h * 0.12, r: 16 };
+        bumpers.push(Bodies.circle(w * 0.5,  h * 0.5,  26, bumperOpts));
+        bumpers.push(Bodies.circle(w * 0.2,  h * 0.38, 18, bumperOpts));
+        bumpers.push(Bodies.circle(w * 0.8,  h * 0.38, 18, bumperOpts));
+        bumpers.push(Bodies.circle(w * 0.3,  h * 0.65, 18, bumperOpts));
+        bumpers.push(Bodies.circle(w * 0.7,  h * 0.65, 18, bumperOpts));
+    }
+    else if (index === 17) {
+        // Hole 18: The Finale — everything combined
+        startPos = { x: w * 0.8, y: h * 0.85 };
+        hole = { x: w * 0.2, y: h * 0.15, r: 16 };
+        walls.push(Bodies.rectangle(w * 0.5,  h * 0.55, 18, h * 0.4, wallOpts));
+        walls.push(Bodies.rectangle(w * 0.5,  h * 0.28, w * 0.6, 18, wallOpts));
+        sandTraps.push({ x: w * 0.75, y: h * 0.4, w: w * 0.35, h: h * 0.14 });
+        bumpers.push(Bodies.circle(w * 0.25, h * 0.55, 22, bumperOpts));
+        bumpers.push(Bodies.circle(w * 0.75, h * 0.72, 22, bumperOpts));
+    }
 
     Composite.add(engine.world, walls);
     Composite.add(engine.world, bumpers);
 
-    const ballOpts = { restitution: 0.5, friction: 0.01, frictionAir: 0.035, density: 0.04 };
+    const ballOpts = { restitution: 0.45, friction: 0.015, frictionAir: 0.028, density: 0.04 };
     golfBall = Bodies.circle(startPos.x, startPos.y, BALL_RADIUS, ballOpts);
     Composite.add(engine.world, golfBall);
 
@@ -237,33 +308,27 @@ function initPhysics() {
     engine.gravity.y = 0;
 }
 
-function checkOrientation() {
-    const warning = document.getElementById('orientation-warning');
-    if (!warning) return;
-    const isMobile   = window.innerWidth < 768;
-    const isPortrait = window.innerHeight > window.innerWidth;
-    warning.style.display = (isMobile && isPortrait) ? 'flex' : 'none';
-}
-
 function resizeCanvas() {
     if (!canvas) return;
     const winW = window.innerWidth;
     const winH = window.innerHeight;
-    let newW, newH;
-    if (winW / winH > ASPECT) { newH = winH; newW = newH * ASPECT; }
-    else                       { newW = winW; newH = newW / ASPECT; }
-    canvas.style.width  = newW + 'px';
-    canvas.style.height = newH + 'px';
-    checkOrientation();
+
+    canvas.width  = winW;
+    canvas.height = winH;
+    canvas.style.width    = winW + 'px';
+    canvas.style.height   = winH + 'px';
+    canvas.style.position = 'fixed';
+    canvas.style.left     = '0px';
+    canvas.style.top      = '0px';
+
+    if (gameRunning) buildLevel(currentHoleIndex);
 }
 
 function getMousePos(e) {
     const rect   = canvas.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const scaleX  = GAME_WIDTH  / rect.width;
-    const scaleY  = GAME_HEIGHT / rect.height;
-    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+    return { x: clientX - rect.left, y: clientY - rect.top };
 }
 
 function isBallMoving() {
@@ -290,7 +355,9 @@ function handleInputEnd() {
     if (dist < 10) return;
     const angle    = Math.atan2(dy, dx);
     const pullDist = Math.min(dist, MAX_PULL);
-    const speed    = pullDist * 0.28;
+    const t        = pullDist / MAX_PULL;
+    const power    = t * t * (3 - 2 * t);    // smoothstep
+    const speed    = 4 + power * 22;         // min 4, max 26
     Body.setVelocity(golfBall, { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed });
     totalStrokes++;
     scoreEl.textContent = totalStrokes;
@@ -412,7 +479,7 @@ function gameLoop() {
     // Win condition
     const distToHole = Math.hypot(golfBall.position.x - hole.x, golfBall.position.y - hole.y);
     const speed      = Math.hypot(golfBall.velocity.x, golfBall.velocity.y);
-    if (distToHole < hole.r && speed < 4) {
+    if (distToHole < hole.r * 0.85 && speed < 8) {
         currentHoleIndex++;
         if (currentHoleIndex >= TOTAL_HOLES) {
             isGameOver  = true;
@@ -448,8 +515,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (titleBestEl) titleBestEl.textContent = displayBest();
 
-    canvas.width  = GAME_WIDTH;
-    canvas.height = GAME_HEIGHT;
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
 
     initPhysics();
     window.addEventListener('resize', resizeCanvas);

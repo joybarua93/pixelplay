@@ -30,20 +30,23 @@ body {
 
 #gameCanvas {
     display: block;
+    position: fixed;
+    left: 0;
+    top: 0;
     background: #1a5c2e;
     /* width/height set by JS */
 }
 
 #score-board {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 64px;
+    left: 14px;
     color: #fff;
-    font-size: 18px;
+    font-size: 16px;
     font-family: 'Lilita One', sans-serif;
     letter-spacing: 1px;
     z-index: 5;
-    text-align: right;
+    text-align: left;
     text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
 }
 
