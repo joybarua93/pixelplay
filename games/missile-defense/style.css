@@ -30,6 +30,9 @@ body {
 
 #gameCanvas {
     display: block;
+    position: fixed;
+    left: 0;
+    top: 0;
     background: #000;
     /* width/height set by JS */
 }

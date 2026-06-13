@@ -430,6 +430,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (titleBestEl) titleBestEl.textContent = getBest();
 
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+
     const diffButtons = document.querySelectorAll('.btn-group .menu-btn');
 
     window.addEventListener('resize', resizeCanvas);
