@@ -153,10 +153,10 @@
         <div id="start-menu" class="overlay">
             <h1 class="title-pulse">LUDO<br>DASH</h1>
             <div class="btn-group">
-                <button class="menu-btn" onclick="startGame(2)" ontouchstart="startGame(2)">2 PLAYERS</button>
-                <button class="menu-btn" onclick="startGame(3)" ontouchstart="startGame(3)">3 PLAYERS</button>
-                <button class="menu-btn" onclick="startGame(4)" ontouchstart="startGame(4)">4 PLAYERS</button>
-                <button class="menu-btn btn-rules" onclick="toggleOverlay('rules-overlay')" ontouchstart="toggleOverlay('rules-overlay')">HOW TO PLAY</button>
+                <button class="menu-btn" onclick="startGame(2)">2 PLAYERS</button>
+                <button class="menu-btn" onclick="startGame(3)">3 PLAYERS</button>
+                <button class="menu-btn" onclick="startGame(4)">4 PLAYERS</button>
+                <button class="menu-btn btn-rules" onclick="toggleOverlay('rules-overlay')">HOW TO PLAY</button>
             </div>
         </div>
 
@@ -171,16 +171,16 @@
                     <li><b>Safe Zones</b> Start gates are safe. 2+ pucks on ANY tile form a blockade.</li>
                     <li><b>Home Run</b> Exact center finish grants an extra turn!</li>
                 </ul>
-                <button class="menu-btn btn-rules" style="width: 100%;" onclick="toggleOverlay('rules-overlay')" ontouchstart="toggleOverlay('rules-overlay')">GOT IT</button>
+                <button class="menu-btn btn-rules" style="width: 100%;" onclick="toggleOverlay('rules-overlay')">GOT IT</button>
             </div>
         </div>
 
         <div id="pause-overlay" class="overlay hidden">
             <h1 class="title-pulse" style="font-size: 36px; margin-bottom: 20px;">PAUSED</h1>
             <div class="btn-group">
-                <button class="menu-btn" onclick="resumeGame()" ontouchstart="resumeGame()">RESUME</button>
-                <button class="menu-btn btn-rules" onclick="restartGame()" ontouchstart="restartGame()">RESTART MATCH</button>
-                <button class="menu-btn btn-danger" onclick="resetToMenu()" ontouchstart="resetToMenu()">MAIN MENU</button>
+                <button class="menu-btn" onclick="resumeGame()">RESUME</button>
+                <button class="menu-btn btn-rules" onclick="restartGame()">RESTART MATCH</button>
+                <button class="menu-btn btn-danger" onclick="resetToMenu()">MAIN MENU</button>
                 <a href="../../index.html"
                    class="menu-btn"
                    style="text-align:center;text-decoration:none;display:block;
@@ -196,7 +196,7 @@
             <p id="instruction">Tap the center dice to roll.</p>
         </div>
 
-        <button id="btn-pause" class="hidden" onclick="pauseGame()" ontouchstart="pauseGame()">||</button>
+        <button id="btn-pause" class="hidden" onclick="pauseGame()">||</button>
         <div id="dice-result" class="hidden">6</div>
     </div>
 
