@@ -111,10 +111,6 @@ function goToTitleScreen() {
     document.getElementById('start-menu').classList.remove('hidden');
 }
 
-// ─── Responsive Canvas Dimensions ────────────────────────────────────────
-const GAME_WIDTH  = 800;
-const GAME_HEIGHT = 600;
-const ASPECT      = GAME_WIDTH / GAME_HEIGHT;
 
 // ─── DOM References (assigned in DOMContentLoaded) ────────────────────────
 let canvas, ctx, scoreEl, finalScoreEl, bestScoreEl, titleBestEl,
@@ -189,46 +185,26 @@ function drawTitleAnimation() {
 }
 
 // ─── Game Functions ───────────────────────────────────────────────────────
-function checkOrientation() {
-    const warning = document.getElementById('orientation-warning');
-    if (!warning) return;
-    const isMobile  = window.innerWidth < 768;
-    const isPortrait = window.innerHeight > window.innerWidth;
-    warning.style.display = (isMobile && isPortrait) ? 'flex' : 'none';
-}
-
 function resizeCanvas() {
     if (!canvas) return;
-    const winW   = window.innerWidth;
-    const winH   = window.innerHeight;
-    const GAME_W = 800;
-    const GAME_H = 600;
+    const winW = window.innerWidth;
+    const winH = window.innerHeight;
 
-    let dispW, dispH, left, top;
-
-    if (winH > winW) {
-        // PORTRAIT — fit to screen width, center vertically
-        dispW = winW;
-        dispH = Math.floor(winW * (GAME_H / GAME_W));
-        left  = 0;
-        top   = Math.floor((winH - dispH) / 2);
-    } else {
-        // LANDSCAPE — fill as much as possible
-        const scale = Math.min(winW / GAME_W, winH / GAME_H);
-        dispW = Math.floor(GAME_W * scale);
-        dispH = Math.floor(GAME_H * scale);
-        left  = Math.floor((winW - dispW) / 2);
-        top   = Math.floor((winH - dispH) / 2);
-    }
-
-    canvas.style.width    = dispW + 'px';
-    canvas.style.height   = dispH + 'px';
+    canvas.width  = winW;
+    canvas.height = winH;
+    canvas.style.width    = winW + 'px';
+    canvas.style.height   = winH + 'px';
     canvas.style.position = 'fixed';
-    canvas.style.left     = left + 'px';
-    canvas.style.top      = top  + 'px';
+    canvas.style.left     = '0px';
+    canvas.style.top      = '0px';
+
+    battery.x = canvas.width  / 2;
+    battery.y = canvas.height - 30;
+
+    if (!gameRunning) buildCities();
 }
 
-function initCities() {
+function buildCities() {
     cities = [];
     const count = 4;
     const spacing = canvas.width / (count + 1);
@@ -342,10 +318,8 @@ function fireMissile(e) {
     const rect = canvas.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const scaleX  = GAME_WIDTH  / rect.width;
-    const scaleY  = GAME_HEIGHT / rect.height;
-    const targetX = (clientX - rect.left) * scaleX;
-    const targetY = (clientY - rect.top)  * scaleY;
+    const targetX = clientX - rect.left;
+    const targetY = clientY - rect.top;
     if (targetY < canvas.height - 40) {
         playerMissiles.push(new PlayerMissile(targetX, targetY));
         sfxFire();
@@ -361,8 +335,8 @@ function startNewGame(difficultySelection) {
     enemyMissiles  = [];
     playerMissiles = [];
     explosions     = [];
-    battery.x = canvas.width  / 2;
-    battery.y = canvas.height - 10;
+    resizeCanvas();
+    buildCities();
     document.getElementById('pause-overlay').style.display = 'none';
     scoreEl.textContent = score;
     startMenu.classList.add('hidden');
@@ -370,7 +344,6 @@ function startNewGame(difficultySelection) {
     document.getElementById('pause-btn').style.display = 'flex';
     gameOverScreen.classList.add('hidden');
     if (titleAnimFrame) { cancelAnimationFrame(titleAnimFrame); titleAnimFrame = null; }
-    initCities();
     lastSpawnTime = performance.now();
     sfxWave();
     requestAnimationFrame(gameLoop);
@@ -457,15 +430,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (titleBestEl) titleBestEl.textContent = getBest();
 
-    canvas.width  = GAME_WIDTH;
-    canvas.height = GAME_HEIGHT;
-
     const diffButtons = document.querySelectorAll('.btn-group .menu-btn');
 
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('orientationchange', resizeCanvas);
-    window.addEventListener('resize', checkOrientation);
-    window.addEventListener('orientationchange', checkOrientation);
     document.getElementById('pause-btn').addEventListener('click', togglePause);
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && gameRunning && !isGameOver) togglePause();
@@ -488,8 +456,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     resizeCanvas();
-    checkOrientation();
-    initCities();
     drawTitleAnimation();
 
 });
