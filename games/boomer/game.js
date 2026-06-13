@@ -108,10 +108,6 @@ function goToTitleScreen() {
     document.getElementById('start-menu').classList.remove('hidden');
 }
 
-// ─── Responsive Canvas Dimensions ────────────────────────────────────────
-const GAME_WIDTH  = 400;
-const GAME_HEIGHT = 700;
-
 // ─── DOM References ───────────────────────────────────────────────────────
 let canvas, ctx, scoreEl, livesEl, finalScoreEl, bestScoreEl, titleBestEl,
     startMenu, gameOverScreen, restartBtn;
@@ -139,27 +135,27 @@ function resizeCanvas() {
     const winW = window.innerWidth;
     const winH = window.innerHeight;
 
-    const scale = Math.min(winW / GAME_WIDTH, winH / GAME_HEIGHT);
-    const dispW = Math.floor(GAME_WIDTH  * scale);
-    const dispH = Math.floor(GAME_HEIGHT * scale);
-
-    canvas.style.width    = dispW + 'px';
-    canvas.style.height   = dispH + 'px';
+    canvas.width  = winW;
+    canvas.height = winH;
+    canvas.style.width    = winW + 'px';
+    canvas.style.height   = winH + 'px';
     canvas.style.position = 'fixed';
-    canvas.style.left     = Math.floor((winW - dispW) / 2) + 'px';
-    canvas.style.top      = Math.floor((winH - dispH) / 2) + 'px';
+    canvas.style.left     = '0px';
+    canvas.style.top      = '0px';
 
-    player.y = GAME_HEIGHT - 40;
-    if (!gameRunning) player.x = (GAME_WIDTH - player.width) / 2;
+    player.y = canvas.height - 40;
+    bomber.y  = 60;
+    if (!gameRunning) {
+        player.x = (canvas.width - player.width) / 2;
+        bomber.x = (canvas.width - bomber.width) / 2;
+    }
 }
 
 function trackInput(e) {
     if (!gameRunning || isGameOver || gamePaused) return;
-    const rect   = canvas.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const scaleX  = GAME_WIDTH / rect.width;
-    let targetX   = (clientX - rect.left) * scaleX - (player.width / 2);
-    targetX = Math.max(0, Math.min(targetX, GAME_WIDTH - player.width));
+    let targetX   = clientX - (player.width / 2);
+    targetX = Math.max(0, Math.min(targetX, canvas.width - player.width));
     player.x = targetX;
 }
 
@@ -167,44 +163,27 @@ class Bomb {
     constructor(x, speed) {
         this.x = x;
         this.y = bomber.y + bomber.height;
-        this.radius = 10;
+        this.radius = 12;
         this.speed = speed + (Math.random() * 2);
         this.isCaught = false;
     }
     update() { this.y += this.speed; }
     draw() {
-        // Glow effect
         ctx.save();
         ctx.shadowColor = '#F97316';
-        ctx.shadowBlur  = 16;
-
-        // Bomb body — bright orange
+        ctx.shadowBlur  = 20;
         ctx.beginPath();
         ctx.fillStyle = '#F97316';
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
-
-        // Dark center for depth
-        ctx.beginPath();
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.arc(this.x - 2, this.y - 2, this.radius * 0.4, 0, Math.PI * 2);
-        ctx.fill();
-
         ctx.restore();
-
-        // Fuse — bright yellow
+        // Fuse
         ctx.beginPath();
         ctx.strokeStyle = '#F5C200';
         ctx.lineWidth = 2;
         ctx.moveTo(this.x, this.y - this.radius);
         ctx.lineTo(this.x + 4, this.y - this.radius - 8);
         ctx.stroke();
-
-        // Fuse spark
-        ctx.beginPath();
-        ctx.fillStyle = '#fff';
-        ctx.arc(this.x + 4, this.y - this.radius - 8, 2, 0, Math.PI * 2);
-        ctx.fill();
     }
 }
 
@@ -346,9 +325,6 @@ document.addEventListener('DOMContentLoaded', () => {
     restartBtn     = document.getElementById('restart-btn');
 
     if (titleBestEl) titleBestEl.textContent = getBest();
-
-    canvas.width  = GAME_WIDTH;
-    canvas.height = GAME_HEIGHT;
 
     const diffButtons = document.querySelectorAll('.btn-group .menu-btn');
 
