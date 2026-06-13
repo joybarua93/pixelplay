@@ -38,13 +38,27 @@
 
     <a id="pp-back" href="../../index.html">PixelPlay</a>
 
-    <div id="game-container">
-        <div id="score-board">
-            SCORE: <span id="score">0</span><br>
-            <span style="font-size:14px;color:rgba(0,212,255,0.7);">
+    <div id="info-bar" style="
+        position:fixed;top:0;left:0;right:0;height:64px;
+        background:#111827;border-bottom:2px solid #1D284A;
+        display:none;align-items:center;justify-content:space-between;
+        padding:0 16px 0 14px;z-index:100;">
+        <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="color:#00d4ff;font-family:'Lilita One',sans-serif;font-size:15px;letter-spacing:1px;">
+                SCORE: <span id="score">0</span>
+            </div>
+            <div style="color:rgba(0,212,255,0.6);font-family:'Lilita One',sans-serif;font-size:12px;letter-spacing:1px;">
                 LEVEL: <span id="level-display">1</span>
-            </span>
+            </div>
         </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+            <div style="color:rgba(255,255,255,0.4);font-family:'Lilita One',sans-serif;font-size:10px;letter-spacing:2px;">NEXT</div>
+            <canvas id="next-canvas" width="48" height="48" style="image-rendering:pixelated;"></canvas>
+        </div>
+        <div style="width:40px;"></div>
+    </div>
+
+    <div id="game-container">
         <canvas id="gameCanvas"></canvas>
 
         <div id="start-menu" class="menu-screen">

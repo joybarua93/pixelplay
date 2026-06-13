@@ -35,17 +35,6 @@ body {
     /* width/height set by JS */
 }
 
-#score-board {
-    position: absolute;
-    top: 64px;
-    left: 14px;
-    color: #00d4ff;
-    font-size: 18px;
-    font-family: 'Lilita One', sans-serif;
-    letter-spacing: 1px;
-    z-index: 5;
-}
-
 .menu-screen {
     position: absolute;
     top: 0;
@@ -70,12 +59,12 @@ body {
 }
 
 /* Per-letter tetromino colors */
-.tl-T  { color: #00F0F0; }
-.tl-E  { color: #F0F000; }
-.tl-T2 { color: #A000F0; }
-.tl-R  { color: #F00000; }
-.tl-I  { color: #0080FF; }
-.tl-X  { color: #F0A000; }
+.tl-T  { color: #38AAEE; }
+.tl-E  { color: #F5C200; }
+.tl-T2 { color: #8B5CF6; }
+.tl-R  { color: #E84040; }
+.tl-I  { color: #3DC46A; }
+.tl-X  { color: #F97316; }
 
 .gameover-title {
     font-family: 'Lilita One', sans-serif;

@@ -100,6 +100,7 @@ function goToTitleScreen() {
     gameRunning = false;
     gamePaused  = false;
     document.getElementById('pause-overlay').style.display = 'none';
+    document.getElementById('info-bar').style.display = 'none';
     document.getElementById('pause-btn').style.display = 'none';
     document.getElementById('pp-back').style.display = 'flex';
     document.getElementById('game-over-screen').classList.add('hidden');
@@ -137,13 +138,13 @@ const difficultySettings = {
 };
 
 const SHAPES = [
-    { matrix: [[1, 1, 1, 1]],                          color: '#00F0F0' }, // I
-    { matrix: [[1, 1, 1], [0, 1, 0]],                  color: '#A000F0' }, // T
-    { matrix: [[1, 1, 1], [1, 0, 0]],                  color: '#F0A000' }, // L
-    { matrix: [[1, 1, 1], [0, 0, 1]],                  color: '#0080FF' }, // J
-    { matrix: [[1, 1], [1, 1]],                         color: '#F0F000' }, // O
-    { matrix: [[1, 1, 0], [0, 1, 1]],                  color: '#00F000' }, // S
-    { matrix: [[0, 1, 1], [1, 1, 0]],                  color: '#F00000' }  // Z
+    { matrix: [[1, 1, 1, 1]],                          color: '#38AAEE' }, // I - PixelPlay blue
+    { matrix: [[1, 1, 1], [0, 1, 0]],                  color: '#8B5CF6' }, // T - PixelPlay purple
+    { matrix: [[1, 1, 1], [1, 0, 0]],                  color: '#F97316' }, // L - PixelPlay orange
+    { matrix: [[1, 1, 1], [0, 0, 1]],                  color: '#2A3660' }, // J - PixelPlay navy
+    { matrix: [[1, 1], [1, 1]],                         color: '#F5C200' }, // O - PixelPlay yellow
+    { matrix: [[1, 1, 0], [0, 1, 1]],                  color: '#3DC46A' }, // S - PixelPlay green
+    { matrix: [[0, 1, 1], [1, 1, 0]],                  color: '#E84040' }  // Z - PixelPlay red
 ];
 
 let piece = { matrix: null, color: null, x: 0, y: 0 };
@@ -202,18 +203,18 @@ function drawTitleAnimation() {
 // ─── Core Game Functions ──────────────────────────────────────────────────
 function resizeCanvas() {
     if (!canvas) return;
-    const winW = window.innerWidth;
-    const winH = window.innerHeight;
-    let newW, newH;
-    if (winW / winH > ASPECT) {
-        newH = winH;
-        newW = newH * ASPECT;
-    } else {
-        newW = winW;
-        newH = newW / ASPECT;
-    }
-    canvas.style.width  = newW + 'px';
-    canvas.style.height = newH + 'px';
+    const BAR_H = 64;
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight - BAR_H;
+    canvas.style.position = 'fixed';
+    canvas.style.top      = BAR_H + 'px';
+    canvas.style.left     = '0px';
+    canvas.style.width    = canvas.width  + 'px';
+    canvas.style.height   = canvas.height + 'px';
+    blockSize = Math.min(
+        Math.floor(canvas.width  / COLS),
+        Math.floor(canvas.height / ROWS)
+    );
 }
 
 function createGrid() {
@@ -284,8 +285,8 @@ function clearLines() {
     }
 
     if (linesCleared > 0) {
-        const basePoints = [0, 100, 300, 500, 800];
-        score += (basePoints[linesCleared] || 800) * config.scoreMultiplier;
+        const lineScores = [0, 150, 400, 750, 1200];
+        score += (lineScores[linesCleared] || 1200) * currentLevel * config.scoreMultiplier;
         scoreEl.textContent = score;
 
         if (linesCleared === 4) sfxTetrix();
@@ -353,6 +354,7 @@ function startNewGame(difficultySelection) {
     const levelEl = document.getElementById('level-display');
     if (levelEl) levelEl.textContent = currentLevel;
     startMenu.classList.add('hidden');
+    document.getElementById('info-bar').style.display = 'flex';
     document.getElementById('pp-back').style.display = 'none';
     document.getElementById('pause-btn').style.display = 'flex';
     gameOverScreen.classList.add('hidden');
@@ -389,27 +391,41 @@ function drawGhostPiece() {
     ctx.restore();
 }
 
-function drawNextPiece() {
-    if (!nextPiece) return;
-    const previewX = canvas.width  - blockSize * 4.5;
-    const previewY = blockSize * 1.5;
-    const bSize    = blockSize * 0.7;
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.font = `${blockSize * 0.5}px 'Lilita One'`;
-    ctx.textAlign = 'center';
-    ctx.fillText('NEXT', previewX + bSize * 1.5, previewY - bSize * 0.5);
-    nextPiece.matrix.forEach((row, r) => {
+function drawNextPiecePreview() {
+    const nc = document.getElementById('next-canvas');
+    if (!nc || !nextPiece) return;
+    const nctx = nc.getContext('2d');
+    nctx.clearRect(0, 0, 48, 48);
+    const m = nextPiece.matrix;
+    const rows = m.length, cols = m[0].length;
+    const bSize = Math.floor(Math.min(48 / cols, 48 / rows)) - 1;
+    const offsetX = Math.floor((48 - cols * bSize) / 2);
+    const offsetY = Math.floor((48 - rows * bSize) / 2);
+    m.forEach((row, r) => {
         row.forEach((val, c) => {
             if (val) {
-                ctx.fillStyle = nextPiece.color;
-                ctx.fillRect(
-                    previewX + c * bSize,
-                    previewY + r * bSize,
-                    bSize - 1, bSize - 1
-                );
+                nctx.fillStyle = nextPiece.color;
+                nctx.shadowColor = nextPiece.color;
+                nctx.shadowBlur = 4;
+                nctx.fillRect(offsetX + c * bSize, offsetY + r * bSize, bSize - 1, bSize - 1);
             }
         });
     });
+    nctx.shadowBlur = 0;
+}
+
+function drawBlock(x, y, color) {
+    const bx = x * blockSize;
+    const by = y * blockSize;
+    const bs = blockSize - 1;
+    ctx.fillStyle = color;
+    ctx.fillRect(bx, by, bs, bs);
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.fillRect(bx + 1, by + 1, bs - 2, 3);
+    ctx.fillRect(bx + 1, by + 1, 3, bs - 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(bx + 1, by + bs - 4, bs - 2, 3);
+    ctx.fillRect(bx + bs - 4, by + 1, 3, bs - 2);
 }
 
 function gameLoop(timestamp = 0) {
@@ -428,21 +444,26 @@ function gameLoop(timestamp = 0) {
     grid.forEach((row, r) => {
         row.forEach((value, c) => {
             if (value !== 0) {
-                ctx.fillStyle = value;
-                ctx.fillRect(c * blockSize, r * blockSize, blockSize - 1, blockSize - 1);
+                ctx.shadowColor = value;
+                ctx.shadowBlur  = 8;
+                drawBlock(c, r, value);
+                ctx.shadowBlur  = 0;
             }
         });
     });
 
-    drawNextPiece();
+    drawNextPiecePreview();
     drawGhostPiece();
 
     if (piece.matrix) {
         piece.matrix.forEach((row, r) => {
             row.forEach((value, c) => {
                 if (value !== 0) {
-                    ctx.fillStyle = flashFrames > 0 ? '#ffffff' : piece.color;
-                    ctx.fillRect((piece.x + c) * blockSize, (piece.y + r) * blockSize, blockSize - 1, blockSize - 1);
+                    const col = flashFrames > 0 ? '#ffffff' : piece.color;
+                    ctx.shadowColor = col;
+                    ctx.shadowBlur  = flashFrames > 0 ? 16 : 10;
+                    drawBlock(piece.x + c, piece.y + r, col);
+                    ctx.shadowBlur  = 0;
                 }
             });
         });
@@ -466,10 +487,6 @@ document.addEventListener('DOMContentLoaded', () => {
     diffButtons   = document.querySelectorAll('.btn-group .menu-btn');
 
     if (titleBestEl) titleBestEl.textContent = getBest();
-
-    canvas.width  = GAME_WIDTH;
-    canvas.height = GAME_HEIGHT;
-    blockSize     = BLOCK_SIZE;
 
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('orientationchange', resizeCanvas);
