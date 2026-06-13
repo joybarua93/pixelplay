@@ -101,10 +101,6 @@ function goToTitleScreen() {
     document.getElementById('start-menu').classList.remove('hidden');
 }
 
-// ─── Responsive Canvas Dimensions ────────────────────────────────────────
-const GAME_WIDTH  = 480;
-const GAME_HEIGHT = 640;
-const ASPECT      = GAME_WIDTH / GAME_HEIGHT;
 
 // ─── DOM References (assigned in DOMContentLoaded) ────────────────────────
 let canvas, ctx, scoreEl, finalScoreEl, bestScoreEl, titleBestEl,
@@ -117,13 +113,18 @@ function resizeCanvas() {
     if (!canvas) return;
     const winW = window.innerWidth;
     const winH = window.innerHeight;
-    let newW, newH;
-    if (winW / winH > ASPECT) { newH = winH; newW = newH * ASPECT; }
-    else                       { newW = winW; newH = newW / ASPECT; }
-    canvas.style.width  = newW + 'px';
-    canvas.style.height = newH + 'px';
-    gridY = GAME_HEIGHT / 11;
-    gridX = GAME_WIDTH  / 13;
+
+    canvas.width  = winW;
+    canvas.height = winH;
+    canvas.style.width    = winW + 'px';
+    canvas.style.height   = winH + 'px';
+    canvas.style.position = 'fixed';
+    canvas.style.left     = '0px';
+    canvas.style.top      = '0px';
+
+    gridY = canvas.height / 11;
+    gridX = canvas.width  / 13;
+
     if (gameRunning) resetFrogPosition();
 }
 
@@ -179,16 +180,50 @@ class Vehicle {
     }
     update() { this.x += this.speed; }
     draw() {
+        const x = this.x, y = this.y, w = this.width, h = this.height;
+        ctx.save();
+
+        // Car body
+        ctx.beginPath();
+        ctx.roundRect(x, y + h * 0.15, w, h * 0.7, 4);
         ctx.fillStyle = this.color;
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-        ctx.fillStyle = '#fff';
+        ctx.fill();
+
+        // Cabin/roof
+        const roofX = this.direction === 1 ? x + w * 0.2 : x + w * 0.1;
+        ctx.beginPath();
+        ctx.roundRect(roofX, y, w * 0.7, h * 0.55, 4);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+
+        // Windshield
+        const windX = this.direction === 1 ? x + w * 0.55 : x + w * 0.15;
+        ctx.beginPath();
+        ctx.roundRect(windX, y + h * 0.05, w * 0.25, h * 0.42, 2);
+        ctx.fillStyle = 'rgba(180,230,255,0.7)';
+        ctx.fill();
+
+        // Headlights (yellow-white)
+        ctx.fillStyle = '#fffde7';
         if (this.direction === 1) {
-            ctx.fillRect(this.x + this.width - 6, this.y + 4,               6, 6);
-            ctx.fillRect(this.x + this.width - 6, this.y + this.height - 10, 6, 6);
+            ctx.fillRect(x + w - 5, y + h * 0.2,  5, 6);
+            ctx.fillRect(x + w - 5, y + h * 0.65, 5, 6);
         } else {
-            ctx.fillRect(this.x, this.y + 4,               6, 6);
-            ctx.fillRect(this.x, this.y + this.height - 10, 6, 6);
+            ctx.fillRect(x, y + h * 0.2,  5, 6);
+            ctx.fillRect(x, y + h * 0.65, 5, 6);
         }
+
+        // Taillights (red)
+        ctx.fillStyle = '#ff1744';
+        if (this.direction === 1) {
+            ctx.fillRect(x, y + h * 0.2,  4, 5);
+            ctx.fillRect(x, y + h * 0.65, 4, 5);
+        } else {
+            ctx.fillRect(x + w - 4, y + h * 0.2,  4, 5);
+            ctx.fillRect(x + w - 4, y + h * 0.65, 4, 5);
+        }
+
+        ctx.restore();
     }
 }
 
@@ -250,21 +285,109 @@ function startNewGame(difficultySelection) {
     requestAnimationFrame(gameLoop);
 }
 
+function drawFrog() {
+    const x = frog.x, y = frog.y, w = frog.width, h = frog.height;
+    const cx = x + w / 2, cy = y + h / 2;
+    ctx.save();
+
+    // Back legs
+    ctx.beginPath();
+    ctx.ellipse(cx - w * 0.32, cy + h * 0.22, w * 0.14, h * 0.12, -0.3, 0, Math.PI * 2);
+    ctx.fillStyle = '#2da856'; ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx + w * 0.32, cy + h * 0.22, w * 0.14, h * 0.12,  0.3, 0, Math.PI * 2);
+    ctx.fillStyle = '#2da856'; ctx.fill();
+
+    // Front legs
+    ctx.beginPath();
+    ctx.ellipse(cx - w * 0.36, cy - h * 0.02, w * 0.1, h * 0.1, -0.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#2da856'; ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx + w * 0.36, cy - h * 0.02, w * 0.1, h * 0.1,  0.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#2da856'; ctx.fill();
+
+    // Body
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + h * 0.05, w * 0.38, h * 0.32, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#3DC46A'; ctx.fill();
+    ctx.strokeStyle = '#1a7a40'; ctx.lineWidth = 1.5; ctx.stroke();
+
+    // Eyes
+    const eyeR = w * 0.11, eyeY = cy - h * 0.18;
+    [cx - w * 0.18, cx + w * 0.18].forEach(ex => {
+        ctx.beginPath(); ctx.arc(ex, eyeY, eyeR, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff'; ctx.fill();
+        ctx.beginPath(); ctx.arc(ex, eyeY, eyeR * 0.55, 0, Math.PI * 2);
+        ctx.fillStyle = '#111'; ctx.fill();
+    });
+
+    // Smile
+    ctx.beginPath();
+    ctx.arc(cx, cy + h * 0.02, w * 0.15, 0.2, Math.PI - 0.2);
+    ctx.strokeStyle = '#1a7a40'; ctx.lineWidth = 1.5; ctx.stroke();
+
+    ctx.restore();
+}
+
 function gameLoop() {
     if (!gameRunning || isGameOver) return;
     if (gamePaused) return;
     const config = difficultySettings[currentDifficulty];
 
+    // Full background
     ctx.fillStyle = '#05070a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#1e293b';
-    ctx.fillRect(0, canvas.height - gridY, canvas.width, gridY);
-    ctx.fillStyle = '#0f172a';
+
+    // Road lanes (rows 1–9) with alternating dark stripes
+    for (let row = 1; row <= 9; row++) {
+        ctx.fillStyle = row % 2 === 0 ? '#1a1a2e' : '#16213e';
+        ctx.fillRect(0, row * gridY, canvas.width, gridY);
+        if (row < 9) {
+            ctx.setLineDash([gridX * 0.4, gridX * 0.4]);
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, (row + 1) * gridY);
+            ctx.lineTo(canvas.width, (row + 1) * gridY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+    }
+
+    // Water zone (top row)
+    ctx.fillStyle = '#0f3460';
     ctx.fillRect(0, 0, canvas.width, gridY);
 
+    // Safe zone (bottom row)
+    ctx.fillStyle = '#1e3a1e';
+    ctx.fillRect(0, canvas.height - gridY, canvas.width, gridY);
+
+    // Lily pads — circles with notch and flower
     targetLilyPads.forEach(pad => {
+        const cx = pad.x + pad.width / 2;
+        const cy = pad.y + pad.height / 2;
+        const r  = Math.min(pad.width, pad.height) / 2;
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.fillStyle = pad.reached ? '#00d4ff' : '#2e7d32';
-        ctx.fillRect(pad.x, pad.y, pad.width, pad.height);
+        ctx.fill();
+        ctx.strokeStyle = pad.reached ? '#0099bb' : '#1a5c1a';
+        ctx.lineWidth = 2; ctx.stroke();
+
+        if (!pad.reached) {
+            // V-notch
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx - r * 0.35, cy - r);
+            ctx.lineTo(cx + r * 0.35, cy - r);
+            ctx.closePath();
+            ctx.fillStyle = '#1a6b32'; ctx.fill();
+            // Flower
+            ctx.beginPath();
+            ctx.arc(cx, cy, r * 0.22, 0, Math.PI * 2);
+            ctx.fillStyle = '#F5C200'; ctx.fill();
+        }
     });
 
     handleSpawning(config);
@@ -288,8 +411,7 @@ function gameLoop() {
         }
     });
 
-    ctx.fillStyle = '#4caf50';
-    ctx.fillRect(frog.x, frog.y, frog.width, frog.height);
+    drawFrog();
 
     if (frog.y <= gridY) {
         let reachedPad = false;
@@ -333,8 +455,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (titleBestEl) titleBestEl.textContent = getBest();
 
-    canvas.width  = GAME_WIDTH;
-    canvas.height = GAME_HEIGHT;
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
 
     const diffButtons = document.querySelectorAll('.btn-group .menu-btn');
 
@@ -351,23 +473,29 @@ document.addEventListener('DOMContentLoaded', () => {
         if (['Space', 'ArrowUp', 'ArrowDown'].includes(e.code)) e.preventDefault();
     });
 
-    let touchStartX = 0;
-    let touchStartY = 0;
+    let touchStartX = 0, touchStartY = 0;
+    const SWIPE_MIN  = 30;
+    const SWIPE_COOL = 200;
+    let lastSwipeTime = 0;
+
     canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
-    }, { passive: true });
+    }, { passive: false });
+
     canvas.addEventListener('touchend', (e) => {
-        if (!touchStartX || !touchStartY) return;
-        const diffX = e.changedTouches[0].clientX - touchStartX;
-        const diffY = e.changedTouches[0].clientY - touchStartY;
-        if (Math.max(Math.abs(diffX), Math.abs(diffY)) > 30) {
-            if (Math.abs(diffX) > Math.abs(diffY)) moveFrog(diffX > 0 ? 'right' : 'left');
-            else moveFrog(diffY > 0 ? 'down' : 'up');
-        }
-        touchStartX = 0;
-        touchStartY = 0;
-    });
+        e.preventDefault();
+        const now = Date.now();
+        if (now - lastSwipeTime < SWIPE_COOL) return;
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        const dy = e.changedTouches[0].clientY - touchStartY;
+        const absDx = Math.abs(dx), absDy = Math.abs(dy);
+        if (Math.max(absDx, absDy) < SWIPE_MIN) return;
+        lastSwipeTime = now;
+        if (absDx > absDy) moveFrog(dx > 0 ? 'right' : 'left');
+        else               moveFrog(dy > 0 ? 'down' : 'up');
+    }, { passive: false });
 
     diffButtons.forEach(btn => {
         btn.addEventListener('click', () => startNewGame(btn.getAttribute('data-difficulty')));
