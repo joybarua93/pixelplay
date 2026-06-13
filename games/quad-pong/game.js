@@ -21,6 +21,7 @@ const BALL_RADIUS      = 12;
 let gameRunning = false;
 let gameStarted = false;
 let ball;
+let ballTrail = [];
 let players = [];
 
 // Speed settings
@@ -235,7 +236,7 @@ function initPlayers(playerCount, vsAI) {
         const scoreEl = document.getElementById(`score-p${cfg.id}`);
         if (scoreEl) {
             scoreEl.classList.remove('hidden');
-            scoreEl.textContent = `${cfg.label}: 5`;
+            updateScoreDisplay(players[players.length - 1]);
         }
     });
 }
@@ -305,6 +306,7 @@ function getSafeAngle() {
 
 function spawnBall() {
     if (ball) Composite.remove(engine.world, ball);
+    ballTrail = [];
 
     ball = Bodies.circle(canvas.width / 2, canvas.height / 2, BALL_RADIUS, {
         restitution: 1.0,
@@ -322,12 +324,20 @@ function spawnBall() {
 // ==========================================
 // COLLISION & SCORING
 // ==========================================
+function updateScoreDisplay(player) {
+    const el = document.getElementById(`score-p${player.id}`);
+    if (!el) return;
+    const filled = '●'.repeat(Math.max(0, player.lives));
+    const empty  = '○'.repeat(Math.max(0, 5 - player.lives));
+    el.textContent = `${player.label} ${filled}${empty}`;
+}
+
 function processHit(player) {
     sfx.damage();
 
     player.lives--;
     const scoreEl = document.getElementById(`score-p${player.id}`);
-    if (scoreEl) scoreEl.textContent = `${player.label}: ${player.lives}`;
+    updateScoreDisplay(player);
 
     canvas.style.transform = `translate(${Math.random()*15 - 7.5}px,${Math.random()*15 - 7.5}px)`;
     setTimeout(() => { canvas.style.transform = 'translate(0,0)'; }, 50);
@@ -371,79 +381,75 @@ function processHit(player) {
 // ==========================================
 // INPUT & RENDERING
 // ==========================================
-function getQPPos(clientX, clientY) {
+const touchToEdge = {};
+
+function getTouchEdge(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
-    return {
-        x: (clientX - rect.left) * (canvas.width  / rect.width),
-        y: (clientY - rect.top)  * (canvas.height / rect.height),
-    };
+    const x = (clientX - rect.left) * (canvas.width  / rect.width);
+    const y = (clientY - rect.top)  * (canvas.height / rect.height);
+    const dists = { bottom: canvas.height - y, top: y, left: x, right: canvas.width - x };
+    return Object.keys(dists).reduce((a, b) => dists[a] < dists[b] ? a : b);
 }
 
-function handleInput(e) {
-    if (!gameRunning) return;
-    e.preventDefault();
-
-    const touches = e.touches && e.touches.length > 0 ? e.touches : [e];
-
-    for (let i = 0; i < touches.length; i++) {
-        const { x, y } = getQPPos(touches[i].clientX, touches[i].clientY);
-
-        const dists = {
-            bottom: canvas.height - y,
-            top:    y,
-            left:   x,
-            right:  canvas.width - x,
-        };
-
-        const closestEdge = Object.keys(dists).reduce((a, b) => dists[a] < dists[b] ? a : b);
-        const p = players.find(pl => pl.edge === closestEdge);
-
-        if (p && p.active && p.paddle) {
-            const minBX = offsetX + PADDLE_LENGTH / 2;
-            const maxBX = offsetX + arenaSize - PADDLE_LENGTH / 2;
-            const minBY = offsetY + PADDLE_LENGTH / 2;
-            const maxBY = offsetY + arenaSize - PADDLE_LENGTH / 2;
-
-            if (p.edge === 'bottom' || p.edge === 'top') {
-                Body.setPosition(p.paddle, { x: Math.max(minBX, Math.min(x, maxBX)), y: p.paddle.position.y });
-            } else {
-                Body.setPosition(p.paddle, { x: p.paddle.position.x, y: Math.max(minBY, Math.min(y, maxBY)) });
-            }
-        }
+function movePaddleByTouch(clientX, clientY, edge) {
+    const p = players.find(pl => pl.edge === edge && pl.active && pl.paddle);
+    if (!p) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (clientX - rect.left) * (canvas.width  / rect.width);
+    const y = (clientY - rect.top)  * (canvas.height / rect.height);
+    const minBX = offsetX + PADDLE_LENGTH / 2;
+    const maxBX = offsetX + arenaSize - PADDLE_LENGTH / 2;
+    const minBY = offsetY + PADDLE_LENGTH / 2;
+    const maxBY = offsetY + arenaSize - PADDLE_LENGTH / 2;
+    const prevX = p.paddle.position.x;
+    const prevY = p.paddle.position.y;
+    if (p.edge === 'bottom' || p.edge === 'top') {
+        const newX = Math.max(minBX, Math.min(x, maxBX));
+        Body.setPosition(p.paddle, { x: newX, y: prevY });
+        Body.setVelocity(p.paddle, { x: newX - prevX, y: 0 });
+    } else {
+        const newY = Math.max(minBY, Math.min(y, maxBY));
+        Body.setPosition(p.paddle, { x: prevX, y: newY });
+        Body.setVelocity(p.paddle, { x: 0, y: newY - prevY });
     }
 }
 
 function drawRect(body, color) {
     const w = body.bounds.max.x - body.bounds.min.x;
     const h = body.bounds.max.y - body.bounds.min.y;
-    ctx.fillStyle = color || '#555';
+    ctx.save();
+    ctx.shadowColor = color;
+    ctx.shadowBlur  = 12;
+    ctx.fillStyle   = color || '#555';
     ctx.fillRect(body.position.x - w / 2, body.position.y - h / 2, w, h);
+    ctx.restore();
 }
 
 function updateAI() {
     if (!ball || !gameRunning) return;
-    const AI_SPEED = 4;
+    const AI_SPEED = 3 + selectedSpeed * 1.2;
     const minBX    = offsetX + PADDLE_LENGTH / 2;
     const maxBX    = offsetX + arenaSize - PADDLE_LENGTH / 2;
     const minBY    = offsetY + PADDLE_LENGTH / 2;
     const maxBY    = offsetY + arenaSize - PADDLE_LENGTH / 2;
+    const lookAhead = 8;
+    const predictX  = ball.position.x + ball.velocity.x * lookAhead;
+    const predictY  = ball.position.y + ball.velocity.y * lookAhead;
 
     players.forEach(p => {
         if (!p.active || !p.paddle || !p.isAI) return;
         if (p.edge === 'top' || p.edge === 'bottom') {
-            const target = Math.max(minBX, Math.min(ball.position.x, maxBX));
+            const target = Math.max(minBX, Math.min(predictX, maxBX));
             const cur    = p.paddle.position.x;
-            Body.setPosition(p.paddle, {
-                x: cur + Math.sign(target - cur) * Math.min(AI_SPEED, Math.abs(target - cur)),
-                y: p.paddle.position.y,
-            });
+            const newX   = cur + Math.sign(target - cur) * Math.min(AI_SPEED, Math.abs(target - cur));
+            Body.setPosition(p.paddle, { x: newX, y: p.paddle.position.y });
+            Body.setVelocity(p.paddle, { x: newX - cur, y: 0 });
         } else {
-            const target = Math.max(minBY, Math.min(ball.position.y, maxBY));
+            const target = Math.max(minBY, Math.min(predictY, maxBY));
             const cur    = p.paddle.position.y;
-            Body.setPosition(p.paddle, {
-                x: p.paddle.position.x,
-                y: cur + Math.sign(target - cur) * Math.min(AI_SPEED, Math.abs(target - cur)),
-            });
+            const newY   = cur + Math.sign(target - cur) * Math.min(AI_SPEED, Math.abs(target - cur));
+            Body.setPosition(p.paddle, { x: p.paddle.position.x, y: newY });
+            Body.setVelocity(p.paddle, { x: 0, y: newY - cur });
         }
     });
 }
@@ -487,13 +493,25 @@ function gameLoop() {
     });
 
     if (ball) {
+        ballTrail.push({ x: ball.position.x, y: ball.position.y });
+        if (ballTrail.length > 8) ballTrail.shift();
+
+        ballTrail.forEach((pos, i) => {
+            const alpha = (i / ballTrail.length) * 0.3;
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, BALL_RADIUS * (i / ballTrail.length), 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+            ctx.fill();
+        });
+
+        ctx.save();
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur  = 15;
         ctx.beginPath();
         ctx.arc(ball.position.x, ball.position.y, BALL_RADIUS, 0, Math.PI * 2);
-        ctx.fillStyle   = '#fff';
-        ctx.shadowColor = '#fff';
-        ctx.shadowBlur  = 15;
+        ctx.fillStyle = '#ffffff';
         ctx.fill();
-        ctx.shadowBlur = 0;
+        ctx.restore();
     }
 
     if (gameRunning) requestAnimationFrame(gameLoop);
@@ -620,8 +638,45 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('orientationchange', resizeQP);
 
     if (canvas) {
-        canvas.addEventListener('mousemove',  handleInput);
-        window.addEventListener('touchmove',  handleInput, { passive: false });
-        window.addEventListener('touchstart', handleInput, { passive: false });
+        canvas.addEventListener('mousemove', e => {
+            if (!gameRunning) return;
+            const edge = getTouchEdge(e.clientX, e.clientY);
+            movePaddleByTouch(e.clientX, e.clientY, edge);
+        });
+
+        canvas.addEventListener('touchstart', e => {
+            e.preventDefault();
+            if (!gameRunning) return;
+            Array.from(e.changedTouches).forEach(touch => {
+                const edge = getTouchEdge(touch.clientX, touch.clientY);
+                touchToEdge[touch.identifier] = edge;
+                movePaddleByTouch(touch.clientX, touch.clientY, edge);
+            });
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', e => {
+            e.preventDefault();
+            if (!gameRunning) return;
+            Array.from(e.changedTouches).forEach(touch => {
+                const edge = touchToEdge[touch.identifier];
+                if (edge) movePaddleByTouch(touch.clientX, touch.clientY, edge);
+            });
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', e => {
+            e.preventDefault();
+            Array.from(e.changedTouches).forEach(touch => {
+                const edge = touchToEdge[touch.identifier];
+                delete touchToEdge[touch.identifier];
+                const p = players.find(pl => pl.edge === edge);
+                if (p && p.paddle) Body.setVelocity(p.paddle, { x: 0, y: 0 });
+            });
+        }, { passive: false });
+
+        canvas.addEventListener('touchcancel', e => {
+            Array.from(e.changedTouches).forEach(touch => {
+                delete touchToEdge[touch.identifier];
+            });
+        }, { passive: false });
     }
 });
