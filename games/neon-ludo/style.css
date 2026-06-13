@@ -1,0 +1,82 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none; 
+}
+
+body {
+    background-color: #050508;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+}
+
+#game-container {
+    position: relative;
+    width: 100vw;       
+    height: 100vh;      
+    background: radial-gradient(circle at center, #120e1f, #050508);
+    overflow: hidden;
+}
+
+#gameCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.hidden { display: none !important; }
+
+/* In-Game UI */
+#ui-header {
+    position: absolute;
+    top: 30px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    pointer-events: none;
+    z-index: 5;
+}
+
+#ui-header h2 { 
+    font-size: 28px; 
+    letter-spacing: 3px; 
+    text-shadow: 0 0 15px currentColor;
+    margin-bottom: 5px;
+}
+
+#ui-header p { 
+    color: #a9b0c0; 
+    font-size: 14px; 
+    letter-spacing: 1px;
+}
+
+/* Big Holographic Dice Result */
+#dice-result {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 120px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 30px #fff, 0 0 60px #ff007a;
+    pointer-events: none;
+    z-index: 10;
+    animation: popAndFade 1.2s ease forwards;
+}
+
+@keyframes popAndFade {
+    0% { opacity: 0; transform: translate(-50%, -30%) scale(0.5); }
+    20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+    30% { transform: translate(-50%, -50%) scale(1); }
+    80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -70%) scale(1.1); }
+}
