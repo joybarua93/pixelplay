@@ -147,6 +147,8 @@ const SHAPES = [
 ];
 
 let piece = { matrix: null, color: null, x: 0, y: 0 };
+let nextPiece = null;
+let flashFrames = 0;
 
 // ─── Title animation state ────────────────────────────────────────────────
 let titlePieces = [];
@@ -219,11 +221,17 @@ function createGrid() {
 }
 
 function spawnPiece() {
-    const randomType = SHAPES[Math.floor(Math.random() * SHAPES.length)];
-    piece.matrix = randomType.matrix;
-    piece.color  = randomType.color;
+    if (!nextPiece) {
+        const t = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+        nextPiece = { matrix: t.matrix, color: t.color };
+    }
+    piece.matrix = nextPiece.matrix;
+    piece.color  = nextPiece.color;
     piece.y = 0;
     piece.x = Math.floor((COLS - piece.matrix[0].length) / 2);
+
+    const t2 = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+    nextPiece = { matrix: t2.matrix, color: t2.color };
 
     if (checkCollision()) {
         isGameOver = true;
@@ -236,14 +244,16 @@ function spawnPiece() {
     }
 }
 
-function checkCollision(offsetX = 0, offsetY = 0, customMatrix = piece.matrix) {
-    for (let r = 0; r < customMatrix.length; r++) {
-        for (let c = 0; c < customMatrix[r].length; c++) {
-            if (customMatrix[r][c] !== 0) {
-                let nextX = piece.x + c + offsetX;
-                let nextY = piece.y + r + offsetY;
-                if (nextX < 0 || nextX >= COLS || nextY >= ROWS) return true;
-                if (nextY >= 0 && grid[nextY][nextX] !== 0)       return true;
+function checkCollision(dx = 0, dy = 0, matrix = null, testY = null) {
+    const m = matrix || piece.matrix;
+    const py = testY !== null ? testY : piece.y;
+    for (let r = 0; r < m.length; r++) {
+        for (let c = 0; c < m[r].length; c++) {
+            if (m[r][c] !== 0) {
+                const nx = piece.x + c + dx;
+                const ny = py + r + dy;
+                if (nx < 0 || nx >= COLS || ny >= ROWS) return true;
+                if (ny >= 0 && grid[ny]?.[nx] !== 0)    return true;
             }
         }
     }
@@ -285,6 +295,8 @@ function clearLines() {
         totalLines += linesCleared;
         currentLevel = Math.floor(totalLines / 10) + 1;
         if (currentLevel > prevLevel) sfxLevelUp();
+        const levelEl = document.getElementById('level-display');
+        if (levelEl) levelEl.textContent = currentLevel;
     }
 }
 
@@ -302,6 +314,7 @@ function rotatePiece() {
     }
     piece.matrix = nextMatrix;
     sfxRotate();
+    flashPiece();
 }
 
 function dropPiece() {
@@ -332,9 +345,13 @@ function startNewGame(difficultySelection) {
     lastTime     = 0;
     totalLines   = 0;
     currentLevel = 1;
+    nextPiece    = null;
+    flashFrames  = 0;
 
     document.getElementById('pause-overlay').style.display = 'none';
     scoreEl.textContent = score;
+    const levelEl = document.getElementById('level-display');
+    if (levelEl) levelEl.textContent = currentLevel;
     startMenu.classList.add('hidden');
     document.getElementById('pp-back').style.display = 'none';
     document.getElementById('pause-btn').style.display = 'flex';
@@ -346,6 +363,53 @@ function startNewGame(difficultySelection) {
     createGrid();
     spawnPiece();
     requestAnimationFrame(gameLoop);
+}
+
+function flashPiece() { flashFrames = 4; }
+
+function drawGhostPiece() {
+    if (!piece || !piece.matrix) return;
+    let ghostY = piece.y;
+    while (!checkCollision(0, 0, null, ghostY + 1)) ghostY++;
+    if (ghostY === piece.y) return;
+    ctx.save();
+    ctx.globalAlpha = 0.2;
+    ctx.fillStyle = piece.color;
+    piece.matrix.forEach((row, r) => {
+        row.forEach((val, c) => {
+            if (val !== 0) {
+                ctx.fillRect(
+                    (piece.x + c) * blockSize,
+                    (ghostY + r)  * blockSize,
+                    blockSize - 1, blockSize - 1
+                );
+            }
+        });
+    });
+    ctx.restore();
+}
+
+function drawNextPiece() {
+    if (!nextPiece) return;
+    const previewX = canvas.width  - blockSize * 4.5;
+    const previewY = blockSize * 1.5;
+    const bSize    = blockSize * 0.7;
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = `${blockSize * 0.5}px 'Lilita One'`;
+    ctx.textAlign = 'center';
+    ctx.fillText('NEXT', previewX + bSize * 1.5, previewY - bSize * 0.5);
+    nextPiece.matrix.forEach((row, r) => {
+        row.forEach((val, c) => {
+            if (val) {
+                ctx.fillStyle = nextPiece.color;
+                ctx.fillRect(
+                    previewX + c * bSize,
+                    previewY + r * bSize,
+                    bSize - 1, bSize - 1
+                );
+            }
+        });
+    });
 }
 
 function gameLoop(timestamp = 0) {
@@ -370,15 +434,19 @@ function gameLoop(timestamp = 0) {
         });
     });
 
+    drawNextPiece();
+    drawGhostPiece();
+
     if (piece.matrix) {
-        ctx.fillStyle = piece.color;
         piece.matrix.forEach((row, r) => {
             row.forEach((value, c) => {
                 if (value !== 0) {
+                    ctx.fillStyle = flashFrames > 0 ? '#ffffff' : piece.color;
                     ctx.fillRect((piece.x + c) * blockSize, (piece.y + r) * blockSize, blockSize - 1, blockSize - 1);
                 }
             });
         });
+        if (flashFrames > 0) flashFrames--;
     }
 
     if (gameRunning) requestAnimationFrame(gameLoop);
@@ -417,36 +485,69 @@ document.addEventListener('DOMContentLoaded', () => {
         if (['Space', 'ArrowUp', 'ArrowDown'].includes(e.code)) e.preventDefault();
     });
 
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchStartTime = 0;
-    canvas.addEventListener('touchstart', (e) => {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
+    let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+    let touchLastMoveX = 0, touchMoveThrottleTime = 0;
+    let touchMoved = false;
+    const SWIPE_THRESH_X = window.innerWidth  * 0.06;
+    const SWIPE_THRESH_Y = window.innerHeight * 0.06;
+    const TAP_THRESH     = 18;
+    const TAP_MAX_MS     = 220;
+    const MOVE_THROTTLE  = 80;
+
+    canvas.addEventListener('touchstart', e => {
+        e.preventDefault();
+        const t = e.touches[0];
+        touchStartX = t.clientX;
+        touchStartY = t.clientY;
+        touchLastMoveX = t.clientX;
         touchStartTime = Date.now();
-    });
-    canvas.addEventListener('touchend', (e) => {
+        touchMoved = false;
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', e => {
+        e.preventDefault();
         if (!gameRunning || isGameOver || gamePaused) return;
-        const diffX = e.changedTouches[0].clientX - touchStartX;
-        const diffY = e.changedTouches[0].clientY - touchStartY;
+        const t = e.touches[0];
+        const dx = t.clientX - touchLastMoveX;
+        const dy = t.clientY - touchStartY;
+        const now = Date.now();
+        if (Math.abs(dx) > SWIPE_THRESH_X && now - touchMoveThrottleTime > MOVE_THROTTLE) {
+            movePiece(dx > 0 ? 'right' : 'left');
+            touchLastMoveX = t.clientX;
+            touchMoveThrottleTime = now;
+            touchMoved = true;
+        }
+        if (dy > SWIPE_THRESH_Y * 0.5 && Math.abs(dx) < SWIPE_THRESH_X) {
+            dropCounter = difficultySettings[currentDifficulty].dropInterval;
+            touchMoved = true;
+        }
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', e => {
+        e.preventDefault();
+        if (!gameRunning || isGameOver || gamePaused) return;
+        const t = e.changedTouches[0];
+        const dx = t.clientX - touchStartX;
+        const dy = t.clientY - touchStartY;
+        const dist = Math.hypot(dx, dy);
         const duration = Date.now() - touchStartTime;
 
-        const swipeThreshY = window.innerHeight * 0.05;
-        const swipeThreshX = window.innerWidth * 0.05;
-        const tapThresh = 15;
+        if (dist < TAP_THRESH && duration < TAP_MAX_MS && !touchMoved) {
+            rotatePiece();
+            return;
+        }
+        if (touchMoved) return;
 
-        if (diffY > swipeThreshY && Math.abs(diffX) < swipeThreshX * 1.5) {
-            // Swipe down
+        if (dy > SWIPE_THRESH_Y * 2 && Math.abs(dx) < SWIPE_THRESH_X * 1.5) {
             while (!checkCollision(0, 1)) { piece.y++; }
             dropPiece();
-        } else if (Math.abs(diffX) < tapThresh && Math.abs(diffY) < tapThresh && duration < 300) {
-            // Short tap
-            rotatePiece();
-        } else if (Math.abs(diffX) > swipeThreshX) {
-            // Swipe horizontal
-            movePiece(diffX > 0 ? 'right' : 'left');
+            flashPiece();
+            return;
         }
-    });
+        if (Math.abs(dx) > SWIPE_THRESH_X) {
+            movePiece(dx > 0 ? 'right' : 'left');
+        }
+    }, { passive: false });
 
     diffButtons.forEach(btn => {
         btn.addEventListener('click', () => startNewGame(btn.getAttribute('data-difficulty')));

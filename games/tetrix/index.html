@@ -39,7 +39,12 @@
     <a id="pp-back" href="../../index.html">PixelPlay</a>
 
     <div id="game-container">
-        <div id="score-board">SCORE: <span id="score">0</span></div>
+        <div id="score-board">
+            SCORE: <span id="score">0</span><br>
+            <span style="font-size:14px;color:rgba(0,212,255,0.7);">
+                LEVEL: <span id="level-display">1</span>
+            </span>
+        </div>
         <canvas id="gameCanvas"></canvas>
 
         <div id="start-menu" class="menu-screen">
@@ -84,31 +89,6 @@
         box-shadow:0 2px 8px rgba(0,0,0,0.4);-webkit-tap-highlight-color:transparent;
         touch-action:manipulation;">⏸</button>
 
-    <div id="orientation-warning" style="
-      display:none;position:fixed;inset:0;z-index:9999;background:#0d1622;
-      flex-direction:column;align-items:center;justify-content:center;
-      gap:16px;font-family:'Lilita One',Arial,sans-serif;color:#fff;
-      text-align:center;padding:20px;">
-      <div style="font-size:52px;">📱↻</div>
-      <div style="font-size:24px;font-weight:900;">Rotate your device</div>
-      <div style="font-size:14px;opacity:0.6;max-width:260px;line-height:1.5;">
-        This game plays best in portrait mode
-      </div>
-    </div>
-
     <script src="game.js"></script>
-    <script>
-    (function() {
-      var warn = document.getElementById('orientation-warning');
-      function check() {
-        var mobile = window.innerWidth < 768;
-        var landscape = window.innerWidth > window.innerHeight;
-        warn.style.display = (mobile && landscape) ? 'flex' : 'none';
-      }
-      window.addEventListener('resize', check);
-      window.addEventListener('orientationchange', check);
-      setTimeout(check, 100);
-    })();
-    </script>
 </body>
 </html>

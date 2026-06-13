@@ -37,10 +37,10 @@ body {
 
 #score-board {
     position: absolute;
-    top: 20px;
-    left: 20px;
+    top: 64px;
+    left: 14px;
     color: #00d4ff;
-    font-size: 20px;
+    font-size: 18px;
     font-family: 'Lilita One', sans-serif;
     letter-spacing: 1px;
     z-index: 5;
