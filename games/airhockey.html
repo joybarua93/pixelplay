@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Air Hockey — PixelPlay</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>🏒</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@800&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;overflow:hidden}
+    body{font-family:'Lilita One',cursive;background:#06182f;color:#fff;display:flex;flex-direction:column;height:100dvh;user-select:none}
+    #start-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100dvh;gap:22px;padding:24px;background:linear-gradient(160deg,#030e1f 0%,#06182f 100%)}
+    .start-emoji{font-size:76px;filter:drop-shadow(0 0 20px rgba(47,159,230,0.6));animation:slide 2s ease-in-out infinite}
+    @keyframes slide{0%,100%{transform:translateX(-12px)}50%{transform:translateX(12px)}}
+    .start-title{font-size:clamp(28px,6vw,40px);color:#fff;text-shadow:0 0 20px rgba(47,159,230,0.5)}
+    .start-sub{font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:rgba(255,255,255,0.4)}
+    .select-group{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px}
+    .section-label{font-family:'Press Start 2P',monospace;font-size:8px;color:rgba(255,255,255,0.35);letter-spacing:.1em}
+    .toggle-group{display:flex;gap:10px;flex-wrap:wrap}
+    .toggle-btn{font-family:'Lilita One',cursive;font-size:15px;padding:10px 22px;border-radius:10px;border:2px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.5);cursor:pointer;transition:all .15s;min-height:44px}
+    .toggle-btn.active{background:#2f9fe6;border-color:#1d284a;color:#fff;box-shadow:3px 3px 0 rgba(0,0,0,0.4)}
+    #play-btn{font-family:'Lilita One',cursive;font-size:22px;padding:14px 60px;background:#3DC46A;color:#1D284A;border:3px solid #1D284A;border-radius:14px;box-shadow:4px 4px 0 #1D284A;cursor:pointer;margin-top:6px;transition:transform .1s,box-shadow .1s}
+    #play-btn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 #1D284A}
+    #play-btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1D284A}
+    #game-screen{display:none;flex-direction:column;height:100dvh}
+    .top-bar{background:#2A3660;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;position:relative}
+    .back-btn{color:#fff;font-size:14px;text-decoration:none;min-width:64px;min-height:44px;display:flex;align-items:center;gap:4px;z-index:1}
+    .top-title{color:#fff;font-size:16px;position:absolute;left:50%;transform:translateX(-50%)}
+    .mode-badge{font-family:'Nunito',sans-serif;font-weight:800;font-size:11px;background:rgba(255,255,255,0.15);color:#fff;border-radius:999px;padding:4px 10px;white-space:nowrap;z-index:1}
+    .game-area{flex:1;display:flex;align-items:center;justify-content:center;background:#06182f;overflow:hidden}
+    canvas{display:block;touch-action:none}
+    .bottom-bar{background:#fff;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-top:3px solid #2A3660;flex-shrink:0}
+    .bottom-score{font-family:'Lilita One',cursive;color:#2A3660;font-size:14px}
+    .btn-bottom{font-family:'Lilita One',cursive;font-size:14px;padding:6px 16px;border-radius:8px;cursor:pointer;min-height:36px;border:2px solid #2A3660;box-shadow:3px 3px 0 #1D284A;transition:transform .1s,box-shadow .1s;text-decoration:none;display:inline-flex;align-items:center}
+    .btn-bottom:active{transform:translate(1px,1px);box-shadow:2px 2px 0 #1D284A}
+    .btn-restart{background:#3DC46A;color:#2A3660}
+    .btn-home{background:#2A3660;color:#fff}
+    #overlay{display:none;position:fixed;inset:0;background:rgba(3,14,31,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;z-index:50;flex-direction:column;gap:18px;padding:24px;text-align:center}
+    #overlay.show{display:flex}
+    .ov-emoji{font-size:64px}
+    .ov-title{font-size:clamp(24px,6vw,36px);color:#2f9fe6;text-shadow:0 0 20px rgba(47,159,230,0.5)}
+    .ov-sub{font-family:'Nunito',sans-serif;font-weight:800;color:rgba(255,255,255,0.4);font-size:13px}
+    .btn-again{font-family:'Lilita One',cursive;font-size:20px;padding:12px 44px;background:#3DC46A;color:#1D284A;border:3px solid #1D284A;border-radius:12px;box-shadow:4px 4px 0 #1D284A;cursor:pointer;margin-top:4px}
+  </style>
+</head>
+<body>
+<div id="start-screen">
+  <div class="start-emoji">🏒</div>
+  <h1 class="start-title">Air Hockey</h1>
+  <p class="start-sub">First to 7 goals wins</p>
+  <div class="select-group">
+    <span class="section-label">MODE</span>
+    <div class="toggle-group" id="mode-group">
+      <button class="toggle-btn active" data-mode="ai">🤖 vs AI</button>
+      <button class="toggle-btn" data-mode="2p">👥 2 Player</button>
+    </div>
+  </div>
+  <div class="select-group" id="diff-section">
+    <span class="section-label">DIFFICULTY</span>
+    <div class="toggle-group" id="diff-group">
+      <button class="toggle-btn" data-diff="easy">Easy</button>
+      <button class="toggle-btn active" data-diff="medium">Medium</button>
+      <button class="toggle-btn" data-diff="hard">Hard</button>
+    </div>
+  </div>
+  <p style="font-family:'Press Start 2P',monospace;font-size:8px;color:rgba(255,255,255,0.3);text-align:center;max-width:280px">Desktop: Mouse / WASD + Arrows · Mobile: Touch your half</p>
+  <button id="play-btn">▶ PLAY</button>
+</div>
+
+<div id="game-screen">
+  <div class="top-bar">
+    <a href="../index.html" class="back-btn">← Back</a>
+    <span class="top-title">AIR HOCKEY</span>
+    <span class="mode-badge" id="mode-badge">🤖 vs AI</span>
+  </div>
+  <div class="game-area" id="game-area">
+    <canvas id="canvas"></canvas>
+  </div>
+  <div class="bottom-bar">
+    <span class="bottom-score" id="btm-score">P1: 0 — P2: 0</span>
+    <button class="btn-bottom btn-restart" id="restart-btn">↺ Restart</button>
+    <a href="../index.html" class="btn-bottom btn-home">🏠 Home</a>
+  </div>
+</div>
+
+<div id="overlay">
+  <div class="ov-emoji" id="ov-emoji">🏆</div>
+  <div class="ov-title" id="ov-title">You Win!</div>
+  <div class="ov-sub"   id="ov-sub">7 — 4</div>
+  <button class="btn-again" id="btn-again">Play Again</button>
+</div>
+
+<script>
+(function(){
+'use strict';
+const WIN=7;
+const FRICTION=0.998;
+const GOAL_RATIO=0.30; // goal width as fraction of rink width
+const AI_SPD={easy:3,medium:5.5,hard:9};
+
+let mode='ai',diff='medium';
+let canvas,ctx,area;
+let LW,LH; // logical width/height
+let puck,m1,m2,scores,paused,goalFlash,gameOver,raf;
+let keys={};
+let touch1=null,touch2=null; // {x,y} for each player's touch
+let goalR; // goal width
+
+document.querySelectorAll('#mode-group .toggle-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#mode-group .toggle-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); mode=b.dataset.mode;
+  document.getElementById('diff-section').style.display=mode==='ai'?'flex':'none';
+}));
+document.querySelectorAll('#diff-group .toggle-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#diff-group .toggle-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); diff=b.dataset.diff;
+}));
+document.getElementById('play-btn').addEventListener('click',startGame);
+document.getElementById('restart-btn').addEventListener('click',()=>{scores={p1:0,p2:0};initGame()});
+document.getElementById('btn-again').addEventListener('click',()=>{document.getElementById('overlay').classList.remove('show');initGame()});
+
+function startGame(){
+  document.getElementById('start-screen').style.display='none';
+  const gs=document.getElementById('game-screen');
+  gs.style.display='flex';gs.style.flexDirection='column';
+  document.getElementById('mode-badge').textContent=mode==='ai'?'🤖 vs AI':'👥 2P';
+  canvas=document.getElementById('canvas');
+  ctx=canvas.getContext('2d');
+  area=document.getElementById('game-area');
+  scores={p1:0,p2:0};
+  setupCanvas();
+  window.addEventListener('resize',setupCanvas);
+  bindInput();
+  initGame();
+  raf=requestAnimationFrame(loop);
+}
+
+function setupCanvas(){
+  const aw=area.clientWidth,ah=area.clientHeight;
+  // Rink: maintain ~0.6 aspect ratio (W:H)
+  const ratio=0.62;
+  let w=aw,h=aw/ratio;
+  if(h>ah){h=ah;w=ah*ratio;}
+  w=Math.floor(w); h=Math.floor(h);
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=w*dpr; canvas.height=h*dpr;
+  canvas.style.width=w+'px'; canvas.style.height=h+'px';
+  ctx.scale(dpr,dpr);
+  LW=w; LH=h;
+  goalR=LW*GOAL_RATIO/2;
+}
+
+const MALLET_R=()=>Math.max(18,LW*0.06);
+const PUCK_R=()=>Math.max(10,LW*0.038);
+const MAX_SPEED=()=>LW*0.022;
+
+function initGame(){
+  const mr=MALLET_R(),pr=PUCK_R();
+  puck={x:LW/2,y:LH/2,vx:(Math.random()>.5?1:-1)*LW*0.008,vy:LH*0.007,r:pr};
+  m1={x:LW/2,y:LH*0.78,r:mr,pvx:0,pvy:0}; // P1 bottom (yellow)
+  m2={x:LW/2,y:LH*0.22,r:mr,pvx:0,pvy:0}; // P2/AI top (red)
+  paused=false; goalFlash=0; gameOver=false;
+  updateBtm();
+  document.getElementById('overlay').classList.remove('show');
+}
+
+function bindInput(){
+  document.addEventListener('keydown',e=>{keys[e.key]=true;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault()});
+  document.addEventListener('keyup',e=>{keys[e.key]=false});
+
+  canvas.addEventListener('mousemove',e=>{
+    const rect=canvas.getBoundingClientRect();
+    const x=(e.clientX-rect.left)*(LW/canvas.offsetWidth);
+    const y=(e.clientY-rect.top)*(LH/canvas.offsetHeight);
+    if(y>LH/2) touch1={x,y}; else if(mode==='2p') touch2={x,y};
+  });
+
+  canvas.addEventListener('touchstart',handleTouch,{passive:false});
+  canvas.addEventListener('touchmove',handleTouch,{passive:false});
+  canvas.addEventListener('touchend',e=>{
+    Array.from(e.changedTouches).forEach(t=>{
+      if(touch1&&t.identifier===touch1.id) touch1=null;
+      if(touch2&&t.identifier===touch2.id) touch2=null;
+    });
+  },{passive:false});
+}
+
+function handleTouch(e){
+  e.preventDefault();
+  const rect=canvas.getBoundingClientRect();
+  Array.from(e.touches).forEach(t=>{
+    const x=(t.clientX-rect.left)*(LW/canvas.offsetWidth);
+    const y=(t.clientY-rect.top)*(LH/canvas.offsetHeight);
+    if(y>LH/2) touch1={id:t.identifier,x,y};
+    else if(mode==='2p') touch2={id:t.identifier,x,y};
+  });
+}
+
+function loop(){
+  raf=requestAnimationFrame(loop);
+  if(!gameOver&&!paused) update();
+  draw();
+}
+
+function clamp(v,mn,mx){return Math.max(mn,Math.min(mx,v));}
+
+function update(){
+  const mr=MALLET_R(),pr=PUCK_R(),ms=LW*0.016;
+
+  // P1 mallet (bottom)
+  const p1prevX=m1.x,p1prevY=m1.y;
+  if(touch1){
+    m1.x=clamp(touch1.x,mr,LW-mr);
+    m1.y=clamp(touch1.y,LH/2+mr,LH-mr);
+  } else {
+    if(keys['a']||keys['A']) m1.x=Math.max(mr,m1.x-ms);
+    if(keys['d']||keys['D']) m1.x=Math.min(LW-mr,m1.x+ms);
+    if(keys['s']||keys['S']) m1.y=Math.min(LH-mr,m1.y+ms);
+    if(keys['w']||keys['W']) m1.y=Math.max(LH/2+mr,m1.y-ms);
+  }
+  m1.pvx=m1.x-p1prevX; m1.pvy=m1.y-p1prevY;
+
+  // P2 mallet / AI (top)
+  const p2prevX=m2.x,p2prevY=m2.y;
+  if(mode==='2p'){
+    if(touch2){
+      m2.x=clamp(touch2.x,mr,LW-mr);
+      m2.y=clamp(touch2.y,mr,LH/2-mr);
+    } else {
+      if(keys['ArrowLeft']) m2.x=Math.max(mr,m2.x-ms);
+      if(keys['ArrowRight']) m2.x=Math.min(LW-mr,m2.x+ms);
+      if(keys['ArrowDown']) m2.y=Math.min(LH/2-mr,m2.y+ms);
+      if(keys['ArrowUp']) m2.y=Math.max(mr,m2.y-ms);
+    }
+  } else {
+    // AI
+    const spd=AI_SPD[diff];
+    let targetX=puck.x, targetY;
+    if(diff==='easy'){
+      targetY=LH*0.25;
+      if(puck.vy<0) targetX=puck.x; // puck coming toward AI
+    } else if(diff==='medium'){
+      if(puck.vy<0){
+        // predict where puck will be
+        const frames=(m2.y-puck.y)/Math.max(0.1,Math.abs(puck.vy));
+        targetX=puck.x+puck.vx*frames;
+        targetX=clamp(targetX,mr,LW-mr);
+        targetY=LH*0.25;
+      } else {
+        targetX=LW/2; targetY=LH*0.2;
+      }
+    } else {
+      // Hard: predict with wall bounces
+      let px=puck.x,py=puck.y,pvx=puck.vx,pvy=puck.vy;
+      const steps=80;
+      for(let i=0;i<steps;i++){
+        px+=pvx;py+=pvy;
+        if(px-pr<0){px=pr;pvx=Math.abs(pvx);}
+        if(px+pr>LW){px=LW-pr;pvx=-Math.abs(pvx);}
+        if(py<LH/2) break;
+      }
+      targetX=clamp(px,mr,LW-mr);
+      targetY=puck.vy<0?LH*0.28:LH*0.18;
+    }
+    const dx=targetX-m2.x,dy=targetY-m2.y;
+    const dist=Math.sqrt(dx*dx+dy*dy)||1;
+    const move=Math.min(dist,spd);
+    m2.x+=dx/dist*move; m2.y+=dy/dist*move;
+    m2.x=clamp(m2.x,mr,LW-mr);
+    m2.y=clamp(m2.y,mr,LH/2-mr);
+  }
+  m2.pvx=m2.x-p2prevX; m2.pvy=m2.y-p2prevY;
+
+  // Move puck
+  puck.x+=puck.vx; puck.y+=puck.vy;
+  puck.vx*=FRICTION; puck.vy*=FRICTION;
+
+  // Wall bounces (sides)
+  if(puck.x-pr<0){puck.x=pr;puck.vx=Math.abs(puck.vx);}
+  if(puck.x+pr>LW){puck.x=LW-pr;puck.vx=-Math.abs(puck.vx);}
+
+  const cx=LW/2;
+  // Top wall (with goal opening)
+  if(puck.y-pr<0){
+    if(puck.x>cx-goalR&&puck.x<cx+goalR){
+      // GOAL for P1
+      scores.p1++; updateBtm();
+      if(scores.p1>=WIN){endGame('p1');return;}
+      goalFlash=30; paused=true; setTimeout(()=>{initGame();paused=false;},1200);
+      return;
+    }
+    puck.y=pr; puck.vy=Math.abs(puck.vy);
+  }
+  // Bottom wall (with goal opening)
+  if(puck.y+pr>LH){
+    if(puck.x>cx-goalR&&puck.x<cx+goalR){
+      // GOAL for P2
+      scores.p2++; updateBtm();
+      if(scores.p2>=WIN){endGame('p2');return;}
+      goalFlash=30; paused=true; setTimeout(()=>{initGame();paused=false;},1200);
+      return;
+    }
+    puck.y=LH-pr; puck.vy=-Math.abs(puck.vy);
+  }
+
+  // Mallet collisions
+  collideMallet(m1); collideMallet(m2);
+
+  // Speed cap
+  const spd=Math.sqrt(puck.vx*puck.vx+puck.vy*puck.vy);
+  const mx=MAX_SPEED();
+  if(spd>mx){puck.vx=puck.vx/spd*mx;puck.vy=puck.vy/spd*mx;}
+
+  if(goalFlash>0) goalFlash--;
+}
+
+function collideMallet(m){
+  const dx=puck.x-m.x,dy=puck.y-m.y;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+  const minDist=puck.r+m.r;
+  if(dist<minDist&&dist>0){
+    const nx=dx/dist,ny=dy/dist;
+    // Push puck out
+    puck.x=m.x+nx*minDist;
+    puck.y=m.y+ny*minDist;
+    // Relative velocity along normal
+    const rvx=puck.vx-m.pvx,rvy=puck.vy-m.pvy;
+    const vn=rvx*nx+rvy*ny;
+    if(vn<0){
+      const impulse=-2*vn;
+      puck.vx+=impulse*nx+m.pvx*0.4;
+      puck.vy+=impulse*ny+m.pvy*0.4;
+    }
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,LW,LH);
+  const cx=LW/2,pr=PUCK_R(),mr=MALLET_R();
+
+  // Rink background
+  const bgGrd=ctx.createLinearGradient(0,0,0,LH);
+  bgGrd.addColorStop(0,'#0a2a50');bgGrd.addColorStop(1,'#06182f');
+  ctx.fillStyle=bgGrd; ctx.fillRect(0,0,LW,LH);
+
+  // Rink border (rounded rect)
+  ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=3;
+  ctx.strokeRect(2,2,LW-4,LH-4);
+
+  // Goals
+  ctx.fillStyle='#031020';
+  ctx.fillRect(cx-goalR,0,goalR*2,3);       // top goal cutout
+  ctx.fillRect(cx-goalR,LH-3,goalR*2,3);   // bottom goal cutout
+
+  // Goal posts
+  const gPostColor='rgba(255,255,255,0.8)';
+  ctx.strokeStyle=gPostColor; ctx.lineWidth=3;
+  [[cx-goalR,0],[cx+goalR,0],[cx-goalR,LH],[cx+goalR,LH]].forEach(([x,y])=>{
+    ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fillStyle=gPostColor; ctx.fill();
+  });
+
+  // Center line
+  ctx.setLineDash([8,10]);
+  ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(0,LH/2); ctx.lineTo(LW,LH/2); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Center circle
+  ctx.beginPath(); ctx.arc(cx,LH/2,LW*0.08,0,Math.PI*2);
+  ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.lineWidth=2; ctx.stroke();
+
+  // Goal flash
+  if(goalFlash>0){
+    ctx.fillStyle=`rgba(255,200,0,${goalFlash/30*0.3})`;
+    ctx.fillRect(0,0,LW,LH);
+  }
+
+  // Scores
+  const fSize=Math.max(18,LW*0.055);
+  ctx.font=`${fSize}px 'Press Start 2P',monospace`;
+  ctx.textAlign='center'; ctx.fillStyle='rgba(255,255,255,0.7)';
+  ctx.fillText(scores.p1,cx,LH*0.6);
+  ctx.fillText(scores.p2,cx,LH*0.45);
+
+  // Mallet 2 (top, red)
+  drawMallet(m2.x,m2.y,mr,'#E84040','#9B1C1C');
+  // Mallet 1 (bottom, yellow)
+  drawMallet(m1.x,m1.y,mr,'#F5C200','#a07800');
+
+  // Puck
+  const pgrd=ctx.createRadialGradient(puck.x-pr*.2,puck.y-pr*.2,0,puck.x,puck.y,pr);
+  pgrd.addColorStop(0,'#555'); pgrd.addColorStop(1,'#111');
+  ctx.beginPath(); ctx.arc(puck.x,puck.y,pr,0,Math.PI*2);
+  ctx.fillStyle=pgrd; ctx.fill();
+  ctx.beginPath(); ctx.arc(puck.x-pr*.25,puck.y-pr*.25,pr*.22,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.fill();
+}
+
+function drawMallet(x,y,r,col1,col2){
+  // Shadow
+  ctx.beginPath(); ctx.arc(x+2,y+3,r,0,Math.PI*2);
+  ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.fill();
+  // Body
+  const grd=ctx.createRadialGradient(x-r*.3,y-r*.3,0,x,y,r);
+  grd.addColorStop(0,col1); grd.addColorStop(1,col2);
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+  ctx.fillStyle=grd; ctx.fill();
+  // Rim
+  ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=2;
+  ctx.stroke();
+  // Center dot
+  ctx.beginPath(); ctx.arc(x,y,r*.18,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.fill();
+}
+
+function updateBtm(){
+  const l=mode==='ai'?'You':'P1',r=mode==='ai'?'AI':'P2';
+  document.getElementById('btm-score').textContent=`${l}: ${scores.p1} — ${r}: ${scores.p2}`;
+}
+
+function endGame(winner){
+  gameOver=true;
+  const isP1=winner==='p1';
+  document.getElementById('ov-emoji').textContent=isP1?'🏆':'🤖';
+  document.getElementById('ov-title').textContent=mode==='ai'?(isP1?'You Win!':'AI Wins!'):(isP1?'P1 Wins!':'P2 Wins!');
+  document.getElementById('ov-sub').textContent=`${scores.p1} — ${scores.p2}`;
+  document.getElementById('overlay').classList.add('show');
+}
+})();
+</script>
+</body>
+</html>
