@@ -6,7 +6,7 @@
 <title>Checkers — PixelPlay</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #000; display: flex; align-items: center; justify-content: center;
+body { background: #0d1622; display: flex; align-items: center; justify-content: center;
        min-height: 100vh; overflow: hidden; }
 canvas { display: block; max-width: 100vw; max-height: 100vh; }
 
@@ -49,34 +49,10 @@ canvas { display: block; max-width: 100vw; max-height: 100vh; }
 </head>
 <body>
 <a id="pp-back" href="../../index.html">PixelPlay</a>
-<div id="orientation-warning" style="
-  display:none;position:fixed;inset:0;z-index:9999;background:#0d1622;
-  flex-direction:column;align-items:center;justify-content:center;
-  gap:16px;font-family:'Lilita One',Arial,sans-serif;color:#fff;
-  text-align:center;padding:20px;">
-  <div style="font-size:52px;">📱↻</div>
-  <div style="font-size:24px;font-weight:900;">Rotate your device</div>
-  <div style="font-size:14px;opacity:0.6;max-width:260px;line-height:1.5;">
-    This game plays best in portrait mode
-  </div>
-</div>
-<script src="../../dist/littlejs.js"></script>
+<script src="../../dist/littlejs.release.js"></script>
 <script src="../../templates/menus.js"></script>
 <script src="../../templates/gamefx.js"></script>
 <script src="ai.js"></script>
 <script src="game.js"></script>
-<script>
-(function() {
-  var warn = document.getElementById('orientation-warning');
-  function check() {
-    var mobile = window.innerWidth < 768;
-    var landscape = window.innerWidth > window.innerHeight;
-    warn.style.display = (mobile && landscape) ? 'flex' : 'none';
-  }
-  window.addEventListener('resize', check);
-  window.addEventListener('orientationchange', check);
-  setTimeout(check, 100);
-})();
-</script>
 </body>
 </html>

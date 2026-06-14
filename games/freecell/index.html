@@ -6,7 +6,7 @@
 <title>FreeCell — PixelPlay</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #000; display: flex; align-items: center; justify-content: center;
+body { background: #0f3320; display: flex; align-items: center; justify-content: center;
        min-height: 100vh; overflow: hidden; }
 canvas { display: block; max-width: 100vw; max-height: 100vh; }
 
@@ -48,61 +48,12 @@ canvas { display: block; max-width: 100vw; max-height: 100vh; }
 </style>
 </head>
 <body>
-<script>
-(function () {
-  function showError(msg) {
-    var box = document.getElementById('err-box');
-    if (!box) {
-      box = document.createElement('div');
-      box.id = 'err-box';
-      box.style.cssText = 'position:fixed;top:70px;left:10px;right:10px;' +
-        'z-index:2147483647;background:#E84040;color:#fff;padding:12px;' +
-        'font:13px monospace;border-radius:10px;white-space:pre-wrap;' +
-        'max-height:60vh;overflow:auto;';
-      document.body.appendChild(box);
-    }
-    box.textContent += msg + '\n\n';
-  }
-  window.addEventListener('error', function (e) {
-    showError('ERROR: ' + e.message + '\n  at ' +
-      (e.filename || '?') + ':' + (e.lineno || '?'));
-  });
-  window.addEventListener('unhandledrejection', function (e) {
-    showError('PROMISE REJECTION: ' + (e.reason && e.reason.message
-      ? e.reason.message : String(e.reason)));
-  });
-})();
-</script>
 <a id="pp-back" href="../../index.html">PixelPlay</a>
-<div id="orientation-warning" style="
-  display:none;position:fixed;inset:0;z-index:9999;background:#0d1622;
-  flex-direction:column;align-items:center;justify-content:center;
-  gap:16px;font-family:'Lilita One',Arial,sans-serif;color:#fff;
-  text-align:center;padding:20px;">
-  <div style="font-size:52px;">📱↻</div>
-  <div style="font-size:24px;font-weight:900;">Rotate your device</div>
-  <div style="font-size:14px;opacity:0.6;max-width:260px;line-height:1.5;">
-    This game plays best in portrait mode
-  </div>
-</div>
-<script src="../../dist/littlejs.js"></script>
+<script src="../../dist/littlejs.release.js"></script>
 <script src="../../templates/menus.js"></script>
 <script src="../../templates/gamefx.js"></script>
 <script src="../../templates/texturegenerator.js"></script>
 <script src="../../templates/cards.js"></script>
 <script src="game.js"></script>
-<script>
-(function() {
-  var warn = document.getElementById('orientation-warning');
-  function check() {
-    var mobile = window.innerWidth < 768;
-    var landscape = window.innerWidth > window.innerHeight;
-    warn.style.display = (mobile && landscape) ? 'flex' : 'none';
-  }
-  window.addEventListener('resize', check);
-  window.addEventListener('orientationchange', check);
-  setTimeout(check, 100);
-})();
-</script>
 </body>
 </html>

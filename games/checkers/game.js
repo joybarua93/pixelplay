@@ -301,7 +301,8 @@ function gameRender()
     const boardH = CK_BOARD * CELL_SIZE;
     const bx = 0, by = BOARD_OFF_Y;
 
-    // Wooden border bevel
+    // Outer shadow + wooden border bevel
+    drawRect(vec2(bx, by), vec2(boardW + .6, boardH + .6), new Color(0, 0, 0, 0.5));
     drawRect(vec2(bx, by), vec2(boardW + .38, boardH + .38), COLOR_BORDER_L);
     drawRect(vec2(bx, by - .07), vec2(boardW + .32, boardH + .3), COLOR_BORDER);
 
@@ -382,8 +383,16 @@ function gameRenderPost()
     if (!isPlaying()) return;
     const cx = mainCanvasSize.x / 2;
 
-    drawTextScreen(`P1: ${scores.p1}   P2: ${scores.p2}`,
-        vec2(cx, 48), 24, rgb(1,1,1,.7), 1, rgb(0,0,0,.4));
+    const p1label = gameMode === 'vsAI' ? 'YOU' : 'P1';
+    const p2label = gameMode === 'vsAI' ? 'AI'  : 'P2';
+    drawTextScreen(`${p1label}: ${scores.p1}`,
+        vec2(cx * 0.55, 48), 22,
+        new Color().setHex('#CC2222'), 2,
+        new Color(0, 0, 0, 0.5));
+    drawTextScreen(`${p2label}: ${scores.p2}`,
+        vec2(cx * 1.45, 48), 22,
+        new Color(0.72, 0.72, 0.72, 1), 2,
+        new Color(0, 0, 0, 0.5));
 
     if (!winner) {
         const label = gameMode === 'pvp'

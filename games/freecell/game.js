@@ -220,7 +220,7 @@ function checkWin()
 
 async function gameInit()
 {
-    canvasClearColor = new Color().setHex('#1a4a2e');
+    canvasClearColor = new Color().setHex('#0f3320');
     setSoundVolume(0.8);
     saveDataInit('PixelPlay_FreeCell');
     setMenuVisibilityCallback(v => {
@@ -361,8 +361,8 @@ function gameUpdatePost()
                 hs.pos, 0,
                 0.8, 0.0, 80, PI,
                 undefined,
-                new Color(1, 0.9, 0.2, 1), new Color(0.8, 0.3, 1.0, 1),
-                new Color(1, 0.9, 0.2, 0), new Color(0.8, 0.3, 1.0, 0),
+                new Color().setHex('#F5C200'), new Color().setHex('#3DC46A'),
+                new Color(1, 0.9, 0.2, 0), new Color(0.2, 0.8, 0.4, 0),
                 0.7, 0.28, 0.04, 0.14, 0.1,
                 0.9, 1, 0.0, PI, 0.15,
                 0.5
@@ -436,13 +436,17 @@ function gameRenderPost()
     const sw = mainCanvasSize.x, sh = mainCanvasSize.y;
 
     // Move counter
-    drawTextScreen(`Moves: ${moveCount}`,
-        vec2(sw / 2, sh - 36), 22, hsl(0, 0, 0.85), 2, BLACK);
+    drawTextScreen(`MOVES: ${moveCount}`,
+        vec2(sw / 2, sh - 36), 24,
+        new Color().setHex('#F5C200'), 2,
+        new Color(0, 0, 0, 0.6));
 
     // Hint bar
     const avail = maxMoveable();
-    drawTextScreen(`Move up to ${avail} card${avail !== 1 ? 's' : ''}  |  Z=undo  R=new game`,
-        vec2(sw / 2, sh - 16), 16, hsl(0, 0, 0.5), 1, BLACK);
+    drawTextScreen(`Move up to ${avail} card${avail !== 1 ? 's' : ''}`,
+        vec2(sw / 2, sh - 16), 16,
+        new Color(1, 1, 1, 0.35), 1,
+        new Color(0, 0, 0, 0));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
