@@ -655,6 +655,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         canvas.addEventListener('touchstart', e => {
+            const pauseBtn = document.getElementById('pause-btn');
+            if (pauseBtn && e.touches[0]) {
+                const r = pauseBtn.getBoundingClientRect(), t = e.touches[0];
+                if (t.clientX >= r.left && t.clientX <= r.right &&
+                    t.clientY >= r.top  && t.clientY <= r.bottom) return;
+            }
             e.preventDefault();
             if (!gameRunning) return;
             Array.from(e.changedTouches).forEach(touch => {
@@ -665,6 +671,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { passive: false });
 
         canvas.addEventListener('touchmove', e => {
+            const pauseBtn = document.getElementById('pause-btn');
+            if (pauseBtn && e.touches[0]) {
+                const r = pauseBtn.getBoundingClientRect(), t = e.touches[0];
+                if (t.clientX >= r.left && t.clientX <= r.right &&
+                    t.clientY >= r.top  && t.clientY <= r.bottom) return;
+            }
             e.preventDefault();
             if (!gameRunning) return;
             Array.from(e.changedTouches).forEach(touch => {
@@ -674,6 +686,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { passive: false });
 
         canvas.addEventListener('touchend', e => {
+            const pauseBtn = document.getElementById('pause-btn');
+            if (pauseBtn && e.changedTouches[0]) {
+                const r = pauseBtn.getBoundingClientRect(), t = e.changedTouches[0];
+                if (t.clientX >= r.left && t.clientX <= r.right &&
+                    t.clientY >= r.top  && t.clientY <= r.bottom) return;
+            }
             e.preventDefault();
             Array.from(e.changedTouches).forEach(touch => {
                 const edge = touchToEdge[touch.identifier];
