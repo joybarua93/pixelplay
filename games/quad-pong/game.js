@@ -637,6 +637,16 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', resizeQP);
     window.addEventListener('orientationchange', resizeQP);
 
+    const pauseBtn = document.getElementById('pause-btn');
+    if (pauseBtn) {
+        pauseBtn.addEventListener('click', toggleQPPause);
+        pauseBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleQPPause();
+        }, { passive: false });
+    }
+
     if (canvas) {
         canvas.addEventListener('mousemove', e => {
             if (!gameRunning) return;
