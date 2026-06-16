@@ -239,6 +239,38 @@ function initPlayers(playerCount, vsAI) {
             updateScoreDisplay(players[players.length - 1]);
         }
     });
+
+    // Position score displays at screen edges (never overlapping the arena).
+    const pos = {
+        2: {
+            1: { bottom: '14px', left: '50%', transform: 'translateX(-50%)', textAlign: 'center' },
+            2: { top:    '14px', left: '50%', transform: 'translateX(-50%)', textAlign: 'center' },
+        },
+        3: {
+            1: { bottom: '14px', left:  '50%', transform: 'translateX(-50%)', textAlign: 'center' },
+            2: { top:    '14px', left:  '20px', textAlign: 'left'  },
+            3: { top:    '14px', right: '20px', textAlign: 'right' },
+        },
+        4: {
+            1: { bottom: '14px', left:  '20px', textAlign: 'left'  },
+            2: { top:    '14px', left:  '20px', textAlign: 'left'  },
+            3: { top:    '14px', right: '20px', textAlign: 'right' },
+            4: { bottom: '14px', right: '20px', textAlign: 'right' },
+        },
+    };
+    const layout = pos[playerCount] || pos[4];
+    configs.forEach(cfg => {
+        const el = document.getElementById(`score-p${cfg.id}`);
+        const p  = layout[cfg.id];
+        if (!el || !p) return;
+        el.style.position  = 'fixed';
+        el.style.top       = p.top       || '';
+        el.style.bottom    = p.bottom    || '';
+        el.style.left      = p.left      || '';
+        el.style.right     = p.right     || '';
+        el.style.transform = p.transform || '';
+        el.style.textAlign = p.textAlign || '';
+    });
 }
 
 function buildArena() {
@@ -683,15 +715,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         canvas.addEventListener('touchstart', e => {
-            const pauseBtn = document.getElementById('pause-btn');
-            if (pauseBtn && e.touches[0]) {
-                const r = pauseBtn.getBoundingClientRect(), t = e.touches[0];
-                if (t.clientX >= r.left && t.clientX <= r.right &&
-                    t.clientY >= r.top  && t.clientY <= r.bottom) return;
-            }
             e.preventDefault();
             if (!gameRunning) return;
+            // Check pause button per-touch so other fingers still control paddles.
+            const pauseRect = document.getElementById('pause-btn')
+                ? document.getElementById('pause-btn').getBoundingClientRect()
+                : null;
             Array.from(e.changedTouches).forEach(touch => {
+                if (pauseRect &&
+                    touch.clientX >= pauseRect.left && touch.clientX <= pauseRect.right &&
+                    touch.clientY >= pauseRect.top  && touch.clientY <= pauseRect.bottom) return;
                 const edge = getTouchEdge(touch.clientX, touch.clientY);
                 touchToEdge[touch.identifier] = edge;
                 movePaddleByTouch(touch.clientX, touch.clientY, edge);
@@ -699,14 +732,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { passive: false });
 
         canvas.addEventListener('touchmove', e => {
-            const pauseBtn = document.getElementById('pause-btn');
-            if (pauseBtn && e.touches[0]) {
-                const r = pauseBtn.getBoundingClientRect(), t = e.touches[0];
-                if (t.clientX >= r.left && t.clientX <= r.right &&
-                    t.clientY >= r.top  && t.clientY <= r.bottom) return;
-            }
             e.preventDefault();
             if (!gameRunning) return;
+            // Use the edge assigned at touchstart — don't re-run getTouchEdge
+            // to avoid jumps when a finger drifts across a zone boundary.
             Array.from(e.changedTouches).forEach(touch => {
                 const edge = touchToEdge[touch.identifier];
                 if (edge) movePaddleByTouch(touch.clientX, touch.clientY, edge);
@@ -714,13 +743,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { passive: false });
 
         canvas.addEventListener('touchend', e => {
-            const pauseBtn = document.getElementById('pause-btn');
-            if (pauseBtn && e.changedTouches[0]) {
-                const r = pauseBtn.getBoundingClientRect(), t = e.changedTouches[0];
-                if (t.clientX >= r.left && t.clientX <= r.right &&
-                    t.clientY >= r.top  && t.clientY <= r.bottom) return;
-            }
             e.preventDefault();
+            // If the touch never registered in touchToEdge (e.g. started on
+            // the pause button), the lookup returns undefined and no-ops cleanly.
             Array.from(e.changedTouches).forEach(touch => {
                 const edge = touchToEdge[touch.identifier];
                 delete touchToEdge[touch.identifier];
@@ -730,6 +755,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { passive: false });
 
         canvas.addEventListener('touchcancel', e => {
+            e.preventDefault();
             Array.from(e.changedTouches).forEach(touch => {
                 delete touchToEdge[touch.identifier];
             });
