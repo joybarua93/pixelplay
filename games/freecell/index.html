@@ -10,12 +10,13 @@ body { background: #0f3320; display: flex; align-items: center; justify-content:
        min-height: 100vh; overflow: hidden; }
 canvas { display: block; max-width: 100vw; max-height: 100vh; }
 
-</style>
+  .ljs-menu-toolbar.anchor-top-right, .ljs-menu-toolbar.anchor-top-left { top: calc(var(--toolbar-margin, 8px) + env(safe-area-inset-top)) !important; }
+  </style>
 <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
 <style>
   #pp-back {
     position: fixed !important;
-    top: 14px !important;
+    top: calc(14px + env(safe-area-inset-top)) !important;
     left: 14px !important;
     z-index: 999999 !important;
     transform: translateZ(1px) !important;
@@ -45,7 +46,8 @@ canvas { display: block; max-width: 100vw; max-height: 100vh; }
     -webkit-user-select: none !important;
     user-select: none !important;
   }
-</style>
+  .ljs-menu-toolbar.anchor-top-right, .ljs-menu-toolbar.anchor-top-left { top: calc(var(--toolbar-margin, 8px) + env(safe-area-inset-top)) !important; }
+  </style>
 </head>
 <body>
 <a id="pp-back" href="../../index.html">PixelPlay</a>
