@@ -309,14 +309,17 @@ function spawnBall() {
     ballTrail = [];
 
     ball = Bodies.circle(canvas.width / 2, canvas.height / 2, BALL_RADIUS, {
-        restitution: 1.0,
-        friction:    0,
-        frictionAir: 0,
-        inertia:     Infinity,
-        label:       'ball',
+        restitution:   1.0,
+        friction:      0,
+        frictionAir:   0,
+        frictionStatic: 0,
+        inertia:       Infinity,
+        inverseInertia: 0,
+        label:         'ball',
     });
 
     Composite.add(engine.world, ball);
+    Body.setInertia(ball, Infinity);
     const angle = getSafeAngle();
     Body.setVelocity(ball, { x: Math.cos(angle) * BALL_SPEED, y: Math.sin(angle) * BALL_SPEED });
 }
@@ -467,6 +470,20 @@ function gameLoop() {
 
     Engine.update(engine, 1000 / 60);
     updateAI();
+
+    // Enforce constant ball speed every frame to counter floating-point energy
+    // loss across collisions. Clamp to [BALL_SPEED, maxSpeed] preserving direction.
+    if (ball && gameRunning) {
+        const vx    = ball.velocity.x;
+        const vy    = ball.velocity.y;
+        const speed = Math.hypot(vx, vy);
+        if (speed > 0) {
+            const target = Math.max(BALL_SPEED, Math.min(speed, maxSpeed));
+            if (Math.abs(speed - target) > 0.01) {
+                Body.setVelocity(ball, { x: (vx / speed) * target, y: (vy / speed) * target });
+            }
+        }
+    }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
