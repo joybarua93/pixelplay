@@ -247,8 +247,8 @@ function buildArena() {
     const w = canvas.width;
     const h = canvas.height;
 
-    arenaSize = Math.min(w, h) - 60;
-    offsetX   = (w - arenaSize) / 2;
+    arenaSize = w - 60;
+    offsetX   = 30;
     offsetY   = (h - arenaSize) / 2;
 
     const wallOpts   = { isStatic: true, restitution: 1.0, friction: 0, label: 'wall' };
@@ -387,6 +387,14 @@ function getTouchEdge(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
     const x = (clientX - rect.left) * (canvas.width  / rect.width);
     const y = (clientY - rect.top)  * (canvas.height / rect.height);
+
+    if (selectedPlayerCount === 2) {
+        // Only top/bottom paddles exist - any touch on that half controls it.
+        return y > canvas.height / 2 ? 'bottom' : 'top';
+    }
+
+    // 3/4 players: all edges exist, so use the closest edge to the touch
+    // point (relative to screen center) to resolve corner ambiguity.
     const dists = { bottom: canvas.height - y, top: y, left: x, right: canvas.width - x };
     return Object.keys(dists).reduce((a, b) => dists[a] < dists[b] ? a : b);
 }
