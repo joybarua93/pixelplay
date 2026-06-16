@@ -104,7 +104,7 @@
                 YOUR WINS: <span id="go-wins" style="color:#00d4ff;">—</span>
             </p>
             <div class="btn-group" style="flex-direction:column;gap:12px;width:220px;margin-top:12px;">
-                <button class="menu-btn play-btn" onclick="qpReturnToMenu()">PLAY AGAIN</button>
+                <button class="menu-btn play-btn" onclick="restartGame()">PLAY AGAIN</button>
                 <a class="menu-btn qp-back-btn" href="../../index.html"
                     style="text-align:center;text-decoration:none;">← PIXELPLAY</a>
             </div>
@@ -119,7 +119,7 @@
             color:#00d4ff;letter-spacing:4px;text-shadow:0 0 20px #00d4ff;">PAUSED</div>
         <button class="menu-btn p4-btn" onclick="toggleQPPause()"
             style="max-width:240px;">RESUME</button>
-        <button class="menu-btn p3-btn" onclick="qpReturnToMenu()"
+        <button class="menu-btn p3-btn" onclick="restartGame()"
             style="max-width:240px;">RESTART</button>
         <button class="menu-btn qp-back-btn" onclick="qpReturnToMenu()"
             style="max-width:240px;">☰ TITLE SCREEN</button>
@@ -138,7 +138,7 @@
     <script src="game.js"></script>
     <script>
     function qpReturnToMenu() {
-        qpPaused = false;
+        qpPaused    = false;
         gameStarted = false;
         gameRunning = false;
         var p = document.getElementById('qp-pause');
@@ -147,6 +147,35 @@
         document.getElementById('pp-back').style.display = 'flex';
         showStartMenu();
     }
+
+    function restartGame() {
+        qpPaused    = false;
+        gameRunning = false;
+        var p = document.getElementById('qp-pause');
+        if (p) p.style.display = 'none';
+        applySpeedSetting();
+        forceStartGame(selectedPlayerCount, selectedVsAI);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var navTarget = (window.Capacitor && window.Capacitor.isNativePlatform())
+            ? '../../app.html' : '../../index.html';
+
+        var pauseNavLink = document.querySelector('#qp-pause a');
+        if (pauseNavLink) {
+            pauseNavLink.addEventListener('pointerdown', function(e) {
+                e.preventDefault();
+                window.location.href = navTarget;
+            });
+        }
+        var goNavLink = document.querySelector('#game-over-screen a');
+        if (goNavLink) {
+            goNavLink.addEventListener('pointerdown', function(e) {
+                e.preventDefault();
+                window.location.href = navTarget;
+            });
+        }
+    });
     </script>
 <script src="../../js/capacitor-nav.js"></script>
 </body>

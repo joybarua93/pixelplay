@@ -397,6 +397,10 @@ function processHit(player) {
     if (active.length <= 1) {
         gameRunning = false;
         sfx.gameover();
+        const pauseBtn = document.getElementById('pause-btn');
+        if (pauseBtn) pauseBtn.style.display = 'none';
+        const ppBack = document.getElementById('pp-back');
+        if (ppBack) ppBack.style.display = 'flex';
 
         const winner = active[0] || null;
         if (winner && winner.id === 1) saveQPWin();
