@@ -160,9 +160,17 @@ async function gameInit()
     canvasFixedSize  = vec2(700, 1080);
     setSoundVolume(.8);
     saveDataInit('PixelPlay_Checkers');
+    const ppBack = document.getElementById('pp-back');
+    if (ppBack) {
+        // pointerdown, not click: LittleJS calls preventDefault() on canvas
+        // touch events which suppresses the synthesized click on mobile.
+        ppBack.addEventListener('pointerdown', e => {
+            e.preventDefault();
+            window.location.href = window.Capacitor ? '../../app.html' : '../../index.html';
+        });
+    }
     setMenuVisibilityCallback(v => {
         paused = v;
-        const ppBack = document.getElementById('pp-back');
         if (ppBack) ppBack.style.display = v && !isPlaying() ? 'flex' : 'none';
     });
 
