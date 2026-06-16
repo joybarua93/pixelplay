@@ -1,0 +1,12 @@
+{
+  "appId": "com.pixelplay.app",
+  "appName": "PixelPlay",
+  "webDir": "www",
+  "server": {
+    "hostname": "pixelplay.app",
+    "androidScheme": "https"
+  },
+  "ios": {
+    "contentInset": "always"
+  }
+}
