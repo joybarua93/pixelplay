@@ -4,10 +4,13 @@
     padding: 0;
     user-select: none;
     -webkit-user-select: none;
+}
+
+#game-container,
+#gameCanvas {
     touch-action: none;
 }
 
-/* Re-enable touch for interactive HTML elements */
 button, a, input, select {
     touch-action: manipulation !important;
     pointer-events: auto !important;
@@ -26,9 +29,9 @@ body {
 
 #game-container {
     position: relative;
-    width: 100vw;       
-    height: 100vh;      
-    background: radial-gradient(circle at center, #1a1a2e, #05050a); 
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle at center, #1a1a2e, #05050a);
     overflow: hidden;
 }
 
@@ -38,7 +41,6 @@ body {
     height: 100%;
 }
 
-/* UI Elements */
 .score-display {
     position: absolute;
     font-size: 24px;
@@ -64,8 +66,8 @@ body {
     justify-content: center;
     align-items: center;
     color: #fff;
-    z-index: 99998; /* Forced to the top */
-    pointer-events: auto; /* Forces screen to accept touches */
+    z-index: 99998;
+    pointer-events: auto;
     gap: 20px;
 }
 
@@ -80,11 +82,10 @@ body {
     width: 100%;
     color: #fff;
     position: relative;
-    z-index: 99999; /* Higher than the menu screen */
-    pointer-events: auto; 
+    z-index: 99999;
+    pointer-events: auto;
 }
 
-/* Highlighted Objective Box */
 .objective-box {
     background: rgba(255, 152, 0, 0.1);
     border: 2px solid #ff9800;
@@ -110,26 +111,12 @@ body {
 }
 
 .btn-group { display: flex; gap: 15px; width: 80%; max-width: 300px; }
-
-.menu-btn {
-    background: transparent;
-    padding: 15px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-    width: 100%;
-    color: #fff;
-}
-
 .menu-btn:active { transform: scale(0.95); }
 
 .p2-btn { border: 2px solid #9c27b0; background: rgba(156, 39, 176, 0.2); }
 .p3-btn { border: 2px solid #ff9800; background: rgba(255, 152, 0, 0.2); }
 .p4-btn { border: 2px solid #00d4ff; background: rgba(0, 212, 255, 0.2); }
 
-/* Back / neutral button */
 .qp-back-btn {
     border: 2px solid #444;
     background: rgba(255,255,255,0.05);
@@ -138,7 +125,6 @@ body {
 }
 .qp-back-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
 
-/* Play button */
 .play-btn {
     border: 2px solid #00d4ff;
     background: rgba(0, 212, 255, 0.25);
@@ -147,7 +133,6 @@ body {
 }
 .play-btn:hover { background: rgba(0, 212, 255, 0.45); }
 
-/* Speed track */
 .speed-track-row {
     display: flex;
     gap: 14px;
@@ -193,14 +178,12 @@ body {
     min-height: 24px;
 }
 
-/* Wins / best display */
 .best-display {
     font-size: 14px;
     color: #888;
     letter-spacing: 2px;
 }
 
-/* Back link at bottom of start menu */
 .back-link {
     color: #444;
     font-size: 13px;

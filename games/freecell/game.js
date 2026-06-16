@@ -262,7 +262,7 @@ async function gameInit()
         onQuit:    () => quitToTitle(newGame),
         extraItems: [
             {type: 'button', label: 'OPTIONS',     onClick: () => pushMenu('options')},
-            {type: 'button', label: '← PIXELPLAY', onClick: () => { window.location.href = '../../index.html'; }},
+            {type: 'button', label: '← PIXELPLAY', onClick: () => { window.location.href = window.Capacitor ? '../../app.html' : '../../index.html'; }},
         ],
     });
 
