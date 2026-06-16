@@ -392,12 +392,17 @@ function getTouchEdge(clientX, clientY) {
     const y = (clientY - rect.top)  * (canvas.height / rect.height);
 
     if (selectedPlayerCount === 2) {
-        // Only top/bottom paddles exist - any touch on that half controls it.
+        // Only top/bottom paddles exist — full-screen vertical split.
         return y > canvas.height / 2 ? 'bottom' : 'top';
     }
 
-    // 3/4 players: all edges exist, so use the closest edge to the touch
-    // point (relative to screen center) to resolve corner ambiguity.
+    // 3/4 players: zone-based detection. Top/bottom priority zones cover
+    // the full width; left/right zones apply to the middle-height band.
+    if (y < canvas.height * 0.30) return 'top';
+    if (y > canvas.height * 0.70) return 'bottom';
+    if (x < canvas.width  * 0.30) return 'left';
+    if (x > canvas.width  * 0.70) return 'right';
+    // Unambiguous center: fall back to nearest screen edge.
     const dists = { bottom: canvas.height - y, top: y, left: x, right: canvas.width - x };
     return Object.keys(dists).reduce((a, b) => dists[a] < dists[b] ? a : b);
 }
