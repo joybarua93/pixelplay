@@ -527,18 +527,16 @@ function resizeCanvas() {
 }
 
 function resizeQP() {
-    if (!canvas || canvas.width === 0) return;
-    const winW   = window.innerWidth;
-    const winH   = window.innerHeight;
-    const aspect = canvas.width / canvas.height;
-    let dispW, dispH;
-    if (winW / winH > aspect) { dispH = winH; dispW = dispH * aspect; }
-    else                       { dispW = winW; dispH = dispW / aspect; }
-    canvas.style.width    = dispW + 'px';
-    canvas.style.height   = dispH + 'px';
+    if (!canvas) return;
+    const winW = window.innerWidth;
+    const winH = window.innerHeight;
+    canvas.width  = winW;
+    canvas.height = winH;
+    canvas.style.width    = winW + 'px';
+    canvas.style.height   = winH + 'px';
     canvas.style.position = 'fixed';
-    canvas.style.left     = Math.floor((winW - dispW) / 2) + 'px';
-    canvas.style.top      = Math.floor((winH - dispH) / 2) + 'px';
+    canvas.style.left     = '0px';
+    canvas.style.top      = '0px';
 }
 
 // ==========================================
