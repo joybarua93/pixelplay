@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>PixelPlay — Pick a Game</title>
+  <script>var _splashStart = Date.now();</script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>🕹️</text></svg>">
   <link rel="stylesheet" href="css/main.css">
 <style>
@@ -163,12 +164,18 @@
 
   <script src="js/main.js"></script>
   <script>
-    // Hide the Capacitor splash screen once the page and all images are painted.
-    // launchAutoHide is false in capacitor.config.json so this call controls
-    // exactly when the branded splash gives way to the loaded game grid.
-    window.addEventListener('load', function() {
+    // Hide the Capacitor splash screen after a minimum visible duration.
+    // _splashStart is set at the very top of <head> for accurate timing.
+    // launchAutoHide is false in capacitor.config.json so this is the sole
+    // trigger — the splash never disappears before we tell it to.
+    var MINIMUM_SPLASH_MS = 1200;
+    document.addEventListener('DOMContentLoaded', function() {
       if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen) {
-        window.Capacitor.Plugins.SplashScreen.hide();
+        var elapsed   = Date.now() - _splashStart;
+        var remaining = Math.max(0, MINIMUM_SPLASH_MS - elapsed);
+        setTimeout(function() {
+          window.Capacitor.Plugins.SplashScreen.hide();
+        }, remaining);
       }
     });
   </script>
