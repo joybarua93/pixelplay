@@ -162,6 +162,16 @@
   </section>
 
   <script src="js/main.js"></script>
+  <script>
+    // Hide the Capacitor splash screen once the page and all images are painted.
+    // launchAutoHide is false in capacitor.config.json so this call controls
+    // exactly when the branded splash gives way to the loaded game grid.
+    window.addEventListener('load', function() {
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen) {
+        window.Capacitor.Plugins.SplashScreen.hide();
+      }
+    });
+  </script>
   </div><!-- #app-scroll -->
 </body>
 </html>
