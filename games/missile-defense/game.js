@@ -128,9 +128,9 @@ let cities = [];
 let currentDifficulty = 'medium';
 
 const difficultySettings = {
-    easy:   { spawnRate: 2200, speedModifier: 0.6, hitboxRadius: 8,   scoreMultiplier: 1, minSpawnRate: 900, maxSpeedBonus: 1.5 },
-    medium: { spawnRate: 1500, speedModifier: 1.1, hitboxRadius: 4.5, scoreMultiplier: 2, minSpawnRate: 600, maxSpeedBonus: 2.5 },
-    hard:   { spawnRate: 1000, speedModifier: 1.8, hitboxRadius: 3,   scoreMultiplier: 3, minSpawnRate: 350, maxSpeedBonus: 4.0 }
+    easy:   { spawnRate: 2200, speedModifier: 0.6, hitboxRadius: 14, drawRadius: 7,  scoreMultiplier: 1, minSpawnRate: 900, maxSpeedBonus: 1.5 },
+    medium: { spawnRate: 1500, speedModifier: 1.1, hitboxRadius: 10, drawRadius: 5,  scoreMultiplier: 2, minSpawnRate: 600, maxSpeedBonus: 2.5 },
+    hard:   { spawnRate: 1000, speedModifier: 1.8, hitboxRadius: 7,  drawRadius: 4,  scoreMultiplier: 3, minSpawnRate: 350, maxSpeedBonus: 4.0 }
 };
 
 const battery = { x: 0, y: 0 };
@@ -220,6 +220,7 @@ class EnemyMissile {
         this.x = this.startX;
         this.y = this.startY;
         this.hitboxRadius = settings.hitboxRadius;
+        this.drawRadius   = settings.drawRadius;
         const targets = cities.filter(c => c.alive).concat([battery]);
         const target = targets[Math.floor(Math.random() * targets.length)];
         this.targetX = target ? target.x : Math.random() * canvas.width;
@@ -240,7 +241,7 @@ class EnemyMissile {
         ctx.stroke();
         ctx.beginPath();
         ctx.fillStyle = '#ff3e3e';
-        ctx.arc(this.x, this.y, this.hitboxRadius, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, this.drawRadius, 0, Math.PI * 2);
         ctx.fill();
     }
 }
