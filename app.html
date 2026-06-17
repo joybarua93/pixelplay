@@ -164,19 +164,60 @@
 
   <script src="js/main.js"></script>
   <script>
-    // Hide the Capacitor splash screen after a minimum visible duration.
-    // _splashStart is set at the very top of <head> for accurate timing.
-    // launchAutoHide is false in capacitor.config.json so this is the sole
-    // trigger — the splash never disappears before we tell it to.
+    // ── Splash-screen hide with minimum duration + bridge-ready polling ──
+    // _splashStart is set as the very first <head> script for accurate timing.
+    // launchAutoHide:false means only this code hides the splash — if we
+    // never call .hide() it stays up forever, so the poll has a hard bail-out.
     var MINIMUM_SPLASH_MS = 1200;
-    document.addEventListener('DOMContentLoaded', function() {
-      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen) {
-        var elapsed   = Date.now() - _splashStart;
-        var remaining = Math.max(0, MINIMUM_SPLASH_MS - elapsed);
-        setTimeout(function() {
-          window.Capacitor.Plugins.SplashScreen.hide();
-        }, remaining);
+    var POLL_INTERVAL_MS  = 50;
+    var POLL_MAX_MS       = 4000;   // give up and hide after 4 s no matter what
+
+    console.log('[Splash] script reached at', Date.now() - _splashStart, 'ms');
+
+    function doHide() {
+      var elapsed   = Date.now() - _splashStart;
+      var remaining = Math.max(0, MINIMUM_SPLASH_MS - elapsed);
+      console.log('[Splash] scheduling hide() in', remaining, 'ms  (elapsed', elapsed, 'ms)');
+      setTimeout(function() {
+        console.log('[Splash] calling SplashScreen.hide()');
+        try { window.Capacitor.Plugins.SplashScreen.hide(); } catch(e) { console.error('[Splash] hide() threw:', e); }
+      }, remaining);
+    }
+
+    function pollForPlugin() {
+      var pollStart = Date.now();
+
+      // Not running inside Capacitor at all — nothing to hide.
+      if (!window.Capacitor || !window.Capacitor.isNativePlatform || !window.Capacitor.isNativePlatform()) {
+        console.log('[Splash] not a native Capacitor context, skipping');
+        return;
       }
+
+      function attempt() {
+        if (window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen) {
+          console.log('[Splash] SplashScreen plugin ready at', Date.now() - _splashStart, 'ms');
+          doHide();
+          return;
+        }
+        var waited = Date.now() - pollStart;
+        if (waited >= POLL_MAX_MS) {
+          console.warn('[Splash] plugin not found after', waited, 'ms — forcing hide');
+          // Last-resort: try anyway (bridge may be partially ready)
+          if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen) {
+            window.Capacitor.Plugins.SplashScreen.hide();
+          }
+          return;
+        }
+        setTimeout(attempt, POLL_INTERVAL_MS);
+      }
+
+      attempt();
+    }
+
+    console.log('[Splash] adding DOMContentLoaded listener');
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('[Splash] DOMContentLoaded at', Date.now() - _splashStart, 'ms');
+      pollForPlugin();
     });
   </script>
   </div><!-- #app-scroll -->
