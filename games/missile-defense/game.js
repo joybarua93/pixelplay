@@ -128,9 +128,9 @@ let cities = [];
 let currentDifficulty = 'medium';
 
 const difficultySettings = {
-    easy:   { spawnRate: 2200, speedModifier: 0.6, hitboxRadius: 8,   scoreMultiplier: 1 },
-    medium: { spawnRate: 1500, speedModifier: 1.1, hitboxRadius: 4.5, scoreMultiplier: 2 },
-    hard:   { spawnRate: 1000, speedModifier: 1.8, hitboxRadius: 3,   scoreMultiplier: 3 }
+    easy:   { spawnRate: 2200, speedModifier: 0.6, hitboxRadius: 8,   scoreMultiplier: 1, minSpawnRate: 900, maxSpeedBonus: 1.5 },
+    medium: { spawnRate: 1500, speedModifier: 1.1, hitboxRadius: 4.5, scoreMultiplier: 2, minSpawnRate: 600, maxSpeedBonus: 2.5 },
+    hard:   { spawnRate: 1000, speedModifier: 1.8, hitboxRadius: 3,   scoreMultiplier: 3, minSpawnRate: 350, maxSpeedBonus: 4.0 }
 };
 
 const battery = { x: 0, y: 0 };
@@ -225,7 +225,8 @@ class EnemyMissile {
         this.targetX = target ? target.x : Math.random() * canvas.width;
         this.targetY = canvas.height;
         const angle = Math.atan2(this.targetY - this.startY, this.targetX - this.startX);
-        this.speed = (1 + Math.random() * 1.2) * settings.speedModifier + (score * 0.02);
+        const speedBonus = Math.min(settings.maxSpeedBonus, score * 0.008);
+        this.speed = (1 + Math.random() * 1.2) * settings.speedModifier + speedBonus;
         this.dx = Math.cos(angle) * this.speed;
         this.dy = Math.sin(angle) * this.speed;
     }
@@ -286,7 +287,7 @@ class Explosion {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.radius = 1;
+        this.radius = 10;
         this.maxRadius = 45;
         this.growthRate = 1.6;
         this.isDone = false;
@@ -356,7 +357,7 @@ function gameLoop(currentTime) {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (currentTime - lastSpawnTime > Math.max(300, config.spawnRate - (score * 10))) {
+    if (currentTime - lastSpawnTime > Math.max(config.minSpawnRate, config.spawnRate - (score * 4))) {
         enemyMissiles.push(new EnemyMissile(config));
         lastSpawnTime = currentTime;
     }
