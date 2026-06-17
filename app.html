@@ -7,11 +7,16 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>🕹️</text></svg>">
   <link rel="stylesheet" href="css/main.css">
 <style>
-  /* Ensure the native WebView background never shows as a black bar */
+  /* html + body fill the WebView with the page background so no black ever
+     shows through, and bounce/overscroll is disabled at the document level. */
   html, body {
     background-color: #DDE8F5 !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overscroll-behavior-y: none !important;
   }
-  /* Fixed header that respects iOS safe area and stays above scrolling content */
+  /* Fixed header clears the iOS status bar via safe-area padding. */
   .site-nav {
     position: fixed !important;
     top: 0 !important;
@@ -21,9 +26,16 @@
     background-color: #DDE8F5 !important;
     padding-top: env(safe-area-inset-top) !important;
   }
-  /* Push content below the fixed header (68px nav height + safe area) */
-  body {
+  /* Scroll wrapper: fills the viewport and scrolls internally.
+     Rubber-band bounce happens inside this div, so the raw html/body
+     background is never exposed regardless of how hard the user pulls. */
+  #app-scroll {
+    position: fixed !important;
+    inset: 0 !important;
+    overflow-y: auto !important;
+    background-color: #DDE8F5 !important;
     padding-top: calc(68px + env(safe-area-inset-top)) !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 </style>
 </head>
@@ -41,6 +53,7 @@
   </header>
 
 
+  <div id="app-scroll">
   <!-- ══════════════════════════════════════════════════════
        GAMES GRID
   ══════════════════════════════════════════════════════════ -->
@@ -149,5 +162,6 @@
   </section>
 
   <script src="js/main.js"></script>
+  </div><!-- #app-scroll -->
 </body>
 </html>
