@@ -122,9 +122,9 @@ let lastDropTime = 0;
 let currentDifficulty = 'medium';
 
 const difficultySettings = {
-    easy:   { bucketWidth: 90,  bombSpeed: 2.5, bomberSpeed: 4,  dropRate: 1400, erraticness: 0.02, scoreMultiplier: 1 },
-    medium: { bucketWidth: 65,  bombSpeed: 4,   bomberSpeed: 6,  dropRate: 900,  erraticness: 0.05, scoreMultiplier: 2 },
-    hard:   { bucketWidth: 45,  bombSpeed: 7,   bomberSpeed: 9,  dropRate: 500,  erraticness: 0.1,  scoreMultiplier: 3 }
+    easy:   { bucketWidth: 90,  bombSpeed: 2.5, bomberSpeed: 4,  dropRate: 1400, erraticness: 0.02, scoreMultiplier: 1, minDropRate: 600, maxBombSpeed:  6 },
+    medium: { bucketWidth: 65,  bombSpeed: 4,   bomberSpeed: 6,  dropRate: 900,  erraticness: 0.05, scoreMultiplier: 2, minDropRate: 400, maxBombSpeed:  9 },
+    hard:   { bucketWidth: 45,  bombSpeed: 7,   bomberSpeed: 9,  dropRate: 500,  erraticness: 0.1,  scoreMultiplier: 3, minDropRate: 250, maxBombSpeed: 13 }
 };
 
 const player = { x: 0, y: 0, width: 75, height: 25 };
@@ -265,9 +265,10 @@ function gameLoop(currentTime) {
     updateBomber(config);
     drawBomber();
 
-    let currentDropRate = Math.max(200, config.dropRate - (score * 2));
+    let currentDropRate = Math.max(config.minDropRate, config.dropRate - (score * 0.8));
     if (currentTime - lastDropTime > currentDropRate) {
-        bombs.push(new Bomb(bomber.x + (bomber.width / 2), config.bombSpeed + (score * 0.05)));
+        const bombSpeed = Math.min(config.maxBombSpeed, config.bombSpeed + (score * 0.02));
+        bombs.push(new Bomb(bomber.x + (bomber.width / 2), bombSpeed));
         lastDropTime = currentTime;
         sfxDrop();
     }
