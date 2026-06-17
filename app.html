@@ -7,6 +7,10 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>🕹️</text></svg>">
   <link rel="stylesheet" href="css/main.css">
 <style>
+  /* Ensure the native WebView background never shows as a black bar */
+  html, body {
+    background-color: #DDE8F5 !important;
+  }
   /* Fixed header that respects iOS safe area and stays above scrolling content */
   .site-nav {
     position: fixed !important;
@@ -14,6 +18,7 @@
     left: 0 !important;
     right: 0 !important;
     z-index: 1000 !important;
+    background-color: #DDE8F5 !important;
     padding-top: env(safe-area-inset-top) !important;
   }
   /* Push content below the fixed header (68px nav height + safe area) */
