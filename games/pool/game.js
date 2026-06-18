@@ -361,6 +361,38 @@ function updatePhysics() {
         }
     }
 
+    // DEBUG: log anyMoving/state every frame while rolling
+    if (state === 'rolling') {
+        console.log('anyMoving:', anyMoving, 'state:', state);
+    }
+
+    // DEBUG: 300-frame stuck report with close-pair detection
+    if (!window._stuckFrameCount) window._stuckFrameCount = 0;
+    if (anyMoving && state === 'rolling') {
+        window._stuckFrameCount++;
+        if (window._stuckFrameCount > 300) {
+            console.warn('[FREEZE DIAG] Still rolling after 300+ frames. Ball report:');
+            for (let b of balls) {
+                if (!b.active) continue;
+                let nearestPocket = Math.min(...pockets.map(p => b.pos.dist(p)));
+                console.warn(`  Ball id=${b.id} speed=${b.vel.mag().toFixed(5)} pos=(${b.pos.x.toFixed(1)},${b.pos.y.toFixed(1)}) nearestPocket=${nearestPocket.toFixed(1)}`);
+            }
+            // Check for any two balls resting very close together
+            for (let i = 0; i < balls.length; i++) {
+                for (let j = i + 1; j < balls.length; j++) {
+                    if (!balls[i].active || !balls[j].active) continue;
+                    const d = balls[i].pos.dist(balls[j].pos);
+                    if (d < 3 * R) {
+                        console.warn(`  [CLOSE PAIR] Ball ${balls[i].id} and Ball ${balls[j].id} are ${d.toFixed(2)}px apart (2*R=${2*R})`);
+                    }
+                }
+            }
+            window._stuckFrameCount = 0; // reset to avoid spam (reports every ~5s)
+        }
+    } else {
+        window._stuckFrameCount = 0;
+    }
+
     if (!anyMoving && state === 'rolling') {
         resolveTurn();
     }
