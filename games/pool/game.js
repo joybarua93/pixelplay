@@ -286,6 +286,7 @@ function buildTable() {
 }
 
 function transposeWorld() {
+    console.log('transposeWorld called', new Error().stack?.split('\n')[1] || '');
     const w = canvas.width, h = canvas.height;
     const ow = h, oh = w;
     const all = [cueBall, ...balls].filter(Boolean);
@@ -299,6 +300,7 @@ function transposeWorld() {
 }
 
 function resizeCanvas() {
+    console.log('resizeCanvas called');
     if (!canvas) return;
     const d = gameDims();
 
@@ -569,6 +571,9 @@ function handleInputEnd() {
     const speed    = MIN_SHOT + power * (MAX_SHOT - MIN_SHOT);
 
     console.log('Shot speed:', speed, 'pullDist:', pullDist, 'MAX_PULL:', MAX_PULL);
+    console.log('Cue ball position:', cueBall.position.x, cueBall.position.y);
+    console.log('Rack ball positions:', balls.map(b => `(${b.position.x.toFixed(0)}, ${b.position.y.toFixed(0)})`).join(' | '));
+    console.log('Aim angle (radians):', angle, 'Velocity direction:', Math.cos(angle).toFixed(3), Math.sin(angle).toFixed(3));
     sfxCue();
     Body.setVelocity(cueBall, {
         x: Math.cos(angle) * speed,
