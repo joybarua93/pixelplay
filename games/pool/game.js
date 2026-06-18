@@ -169,9 +169,10 @@ const BALL_RADIUS = 12;
 // ─── Aiming & AI State ────────────────────────────────────────────────────
 let isAiming = false;
 let dragCurrent = { x: 0, y: 0 };
+let prevAngle = 0;
 const MAX_PULL  = 420;
-const MIN_SHOT  = 3;
-const MAX_SHOT  = 34;
+const MIN_SHOT  = 4;
+const MAX_SHOT  = 32;
 let aiTimer = null;
 
 function initPhysics() {
@@ -187,7 +188,7 @@ function rebuildStaticBodies() {
     const w = canvas.width;
     const h = canvas.height;
 
-    const wallOptions = { isStatic: true, restitution: 0.8, friction: 0 };
+    const wallOptions = { isStatic: true, restitution: 0.72, friction: 0 };
     const wallThick = 50;
 
     walls.push(
@@ -198,7 +199,7 @@ function rebuildStaticBodies() {
     );
     Composite.add(engine.world, walls);
 
-    const pRad = 24;
+    const pRad = 30;
     if (h > w) {
         // PORTRAIT: long rails are left/right — mid pockets there
         pockets = [
@@ -227,9 +228,9 @@ function buildTable() {
     const h = canvas.height;
 
     const ballOptions = {
-        restitution: 0.92,
+        restitution: 0.85,
         friction: 0.005,
-        frictionAir: 0.012,
+        frictionAir: 0.022,
         density: 0.005,
         slop: 0.05
     };
@@ -434,19 +435,23 @@ function takeAITurn() {
             const aimAng = Math.atan2(gy - cueBall.position.y, gx - cueBall.position.x);
             let cut = Math.abs(aimAng - toPocket);
             if (cut > Math.PI) cut = 2 * Math.PI - cut;
-            if (cut > 1.2) continue;
+            if (cut > 0.9) continue;
 
             const d1 = Math.hypot(gx - cueBall.position.x, gy - cueBall.position.y);
             const d2 = Math.hypot(p.x - ball.position.x, p.y - ball.position.y);
             const score = (Math.PI - cut) * 2 - (d1 + d2) / 400;
-            if (!best || score > best.score) best = { aimAng, d1, d2, score };
+            if (!best || score > best.score) best = { aimAng, d1, d2, score, cut };
         }
     }
 
     let aimAngle, speed;
     if (best) {
-        aimAngle = best.aimAng + (Math.random() - 0.5) * 0.035;
-        const need = (best.d1 + best.d2 * 1.4) * 0.030;
+        const missChance = Math.min(0.35, (best.cut / 0.9) * 0.25 + ((best.d1 + best.d2) / 1500) * 0.15);
+        const angleNoise = (Math.random() < missChance)
+            ? (Math.random() - 0.5) * 0.15
+            : (Math.random() - 0.5) * 0.035;
+        aimAngle = best.aimAng + angleNoise;
+        const need = (best.d1 + best.d2 * 1.4) * 0.038;
         speed = Math.min(MAX_SHOT - 4, Math.max(9, need));
     } else {
         const nb = legalTargets.reduce((a, b) =>
@@ -550,8 +555,12 @@ function handleInputEnd() {
     const dist = Math.hypot(dx, dy);
     if (dist < 10) return;
 
-    const angle    = Math.atan2(dy, dx);
+    const rawAngle = Math.atan2(dy, dx);
     const pullDist = Math.min(dist, MAX_PULL);
+    // Fine-aim zone: blend toward prevAngle for sub-25% pulls to suppress jitter
+    const angle = (pullDist / MAX_PULL < 0.25)
+        ? prevAngle + (rawAngle - prevAngle) * 0.4
+        : rawAngle;
     const t        = pullDist / MAX_PULL;
     const power    = t * t * (3 - 2 * t);    // smoothstep
     const speed    = MIN_SHOT + power * (MAX_SHOT - MIN_SHOT);
@@ -702,10 +711,15 @@ function gameLoop() {
     }
 
     if (isAiming) {
-        const dx       = cueBall.position.x - dragCurrent.x;
-        const dy       = cueBall.position.y - dragCurrent.y;
-        const angle    = Math.atan2(dy, dx);
-        const pullDist = Math.min(Math.hypot(dx, dy), MAX_PULL);
+        const dx        = cueBall.position.x - dragCurrent.x;
+        const dy        = cueBall.position.y - dragCurrent.y;
+        const rawAngle  = Math.atan2(dy, dx);
+        const pullDist  = Math.min(Math.hypot(dx, dy), MAX_PULL);
+        // Mirror the fine-aim smoothing so the preview line matches the shot angle
+        const angle = (pullDist / MAX_PULL < 0.25)
+            ? prevAngle + (rawAngle - prevAngle) * 0.4
+            : rawAngle;
+        prevAngle = angle;
 
         if (pullDist > 10) {
             const aimData = calculateAimTrajectory(cueBall.position.x, cueBall.position.y, angle);
