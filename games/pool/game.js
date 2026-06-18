@@ -158,6 +158,7 @@ let p1Group = null;        // 'red' | 'yellow' | null = open table
 let p2Group = null;
 let turnShouldPass = false;
 let eightBallSunk = false;
+let isBreakShot = true;
 
 // ─── Physics Entities ─────────────────────────────────────────────────────
 let cueBall;
@@ -219,6 +220,7 @@ function rebuildStaticBodies() {
 }
 
 function buildTable() {
+    isBreakShot = true;
     Composite.clear(engine.world);
     balls = [];
     walls = [];
@@ -565,12 +567,19 @@ function handleInputEnd() {
         : rawAngle;
     const t        = pullDist / MAX_PULL;
     const power    = t * t * (3 - 2 * t);    // smoothstep
-    const speed    = MIN_SHOT + power * (MAX_SHOT - MIN_SHOT);
+    let speed      = MIN_SHOT + power * (MAX_SHOT - MIN_SHOT);
+    let shotAngle  = angle;
+
+    if (isBreakShot) {
+        speed     = Math.min(speed * 1.15, MAX_SHOT * 1.2);
+        shotAngle += (Math.random() - 0.5) * 0.04;
+        isBreakShot = false;
+    }
 
     sfxCue();
     Body.setVelocity(cueBall, {
-        x: Math.cos(angle) * speed,
-        y: Math.sin(angle) * speed
+        x: Math.cos(shotAngle) * speed,
+        y: Math.sin(shotAngle) * speed
     });
 }
 
