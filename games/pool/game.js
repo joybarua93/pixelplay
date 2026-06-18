@@ -360,6 +360,40 @@ function updatePhysics() {
         }
     }
 
+    // DEBUG: log anyMoving/state every frame while rolling
+    if (state === 'rolling') {
+        console.log('anyMoving:', anyMoving, 'state:', state);
+    }
+
+    // DEBUG: after 300 frames of being stuck in rolling, dump which balls are still moving
+    if (!updatePhysics._rollFrames) updatePhysics._rollFrames = 0;
+    if (anyMoving && state === 'rolling') {
+        updatePhysics._rollFrames++;
+        if (updatePhysics._rollFrames > 300) {
+            console.warn('[FREEZE DIAG] Still rolling after 300+ frames. Ball report:');
+            for (const b of balls) {
+                if (!b.active) continue;
+                const spd = b.vel.mag();
+                if (spd > 0.001) {
+                    // find nearest pocket and distance
+                    let nearestPocketDist = Infinity;
+                    for (const p of pockets) nearestPocketDist = Math.min(nearestPocketDist, b.pos.dist(p));
+                    const inFunnel = nearestPocketDist < POCKET_R * 1.4;
+                    const inPocket = nearestPocketDist < POCKET_R;
+                    console.warn(
+                        `  Ball id=${b.id} speed=${spd.toFixed(5)}` +
+                        ` pos=(${b.pos.x.toFixed(1)},${b.pos.y.toFixed(1)})` +
+                        ` nearestPocket=${nearestPocketDist.toFixed(1)}` +
+                        ` inFunnel=${inFunnel} inPocket=${inPocket}`
+                    );
+                }
+            }
+            updatePhysics._rollFrames = 0; // reset to avoid spam (reports every ~5s)
+        }
+    } else {
+        updatePhysics._rollFrames = 0;
+    }
+
     if (!anyMoving && state === 'rolling') {
         resolveTurn();
     }
