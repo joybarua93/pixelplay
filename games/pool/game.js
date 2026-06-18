@@ -180,6 +180,7 @@ function initPhysics() {
     engine.gravity.y = 0;
     engine.positionIterations = 10;
     engine.velocityIterations = 10;
+    console.log('velocityIterations:', engine.velocityIterations, 'positionIterations:', engine.positionIterations);
 }
 
 function rebuildStaticBodies() {
@@ -567,6 +568,7 @@ function handleInputEnd() {
     const power    = t * t * (3 - 2 * t);    // smoothstep
     const speed    = MIN_SHOT + power * (MAX_SHOT - MIN_SHOT);
 
+    console.log('Shot speed:', speed, 'pullDist:', pullDist, 'MAX_PULL:', MAX_PULL);
     sfxCue();
     Body.setVelocity(cueBall, {
         x: Math.cos(angle) * speed,
