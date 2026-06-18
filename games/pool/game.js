@@ -172,12 +172,14 @@ let dragCurrent = { x: 0, y: 0 };
 let prevAngle = 0;
 const MAX_PULL  = 420;
 const MIN_SHOT  = 4;
-const MAX_SHOT  = 32;
+const MAX_SHOT  = 46;
 let aiTimer = null;
 
 function initPhysics() {
     engine = Engine.create();
     engine.gravity.y = 0;
+    engine.positionIterations = 10;
+    engine.velocityIterations = 10;
 }
 
 function rebuildStaticBodies() {
@@ -228,7 +230,7 @@ function buildTable() {
     const h = canvas.height;
 
     const ballOptions = {
-        restitution: 0.85,
+        restitution: 0.92,
         friction: 0.005,
         frictionAir: 0.022,
         density: 0.005,
@@ -452,7 +454,7 @@ function takeAITurn() {
             : (Math.random() - 0.5) * 0.035;
         aimAngle = best.aimAng + angleNoise;
         const need = (best.d1 + best.d2 * 1.4) * 0.038;
-        speed = Math.min(MAX_SHOT - 4, Math.max(9, need));
+        speed = Math.min(28, Math.max(9, need));
     } else {
         const nb = legalTargets.reduce((a, b) =>
             Math.hypot(a.position.x - cueBall.position.x, a.position.y - cueBall.position.y) <
