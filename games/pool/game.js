@@ -643,10 +643,19 @@ function gameLoop() {
     if (!window._debugFrameCount && Math.hypot(cueBall.velocity.x, cueBall.velocity.y) > 5) {
         window._debugFrameCount = 0;
     }
-    if (window._debugFrameCount !== undefined && window._debugFrameCount < 25) {
+    if (window._debugFrameCount !== undefined && window._debugFrameCount < 60) {
         const speeds = [cueBall, ...balls].map(b => Math.hypot(b.velocity.x, b.velocity.y).toFixed(2));
         console.log(`Frame ${window._debugFrameCount}:`, speeds.join(', '));
         window._debugFrameCount++;
+    }
+    // TEMP DEBUG: position displacement tracking from frame 24 onward
+    if (window._debugFrameCount !== undefined && window._debugFrameCount === 25) {
+        window._debugPositions = [cueBall, ...balls].map(b => ({ x: b.position.x, y: b.position.y }));
+    }
+    if (window._debugPositions && window._debugFrameCount > 25 && window._debugFrameCount < 61) {
+        const current = [cueBall, ...balls].map(b => ({ x: b.position.x, y: b.position.y }));
+        const deltas = current.map((c, i) => Math.hypot(c.x - window._debugPositions[i].x, c.y - window._debugPositions[i].y).toFixed(1));
+        console.log(`Frame ${window._debugFrameCount} displacement from frame24:`, deltas.join(', '));
     }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
