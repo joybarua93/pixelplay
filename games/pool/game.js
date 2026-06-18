@@ -574,6 +574,8 @@ function handleInputEnd() {
         x: Math.cos(angle) * speed,
         y: Math.sin(angle) * speed
     });
+    console.log('Post-setVelocity cueBall velocity:', cueBall.velocity.x.toFixed(2), cueBall.velocity.y.toFixed(2));
+    window._logNextFrame = true;
 }
 
 function startNewGame(mode) {
@@ -626,6 +628,22 @@ function gameLoop() {
     if (gamePaused) return;
 
     Engine.update(engine, 1000 / 60);
+
+    // TEMP DEBUG: first-frame velocity after shot is set
+    if (window._logNextFrame) {
+        console.log('First-frame post-shot cueBall velocity:', cueBall.velocity.x.toFixed(2), cueBall.velocity.y.toFixed(2));
+        window._logNextFrame = false;
+    }
+    // TEMP DEBUG: log velocities during break
+    if (!window._debugFrameCount && Math.hypot(cueBall.velocity.x, cueBall.velocity.y) > 5) {
+        window._debugFrameCount = 0;
+    }
+    if (window._debugFrameCount !== undefined && window._debugFrameCount < 10) {
+        const speeds = [cueBall, ...balls].map(b => Math.hypot(b.velocity.x, b.velocity.y).toFixed(2));
+        console.log(`Frame ${window._debugFrameCount}:`, speeds.join(', '));
+        window._debugFrameCount++;
+    }
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (isTableMoving()) {
