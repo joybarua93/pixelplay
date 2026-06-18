@@ -643,7 +643,7 @@ function gameLoop() {
     if (!window._debugFrameCount && Math.hypot(cueBall.velocity.x, cueBall.velocity.y) > 5) {
         window._debugFrameCount = 0;
     }
-    if (window._debugFrameCount !== undefined && window._debugFrameCount < 10) {
+    if (window._debugFrameCount !== undefined && window._debugFrameCount < 25) {
         const speeds = [cueBall, ...balls].map(b => Math.hypot(b.velocity.x, b.velocity.y).toFixed(2));
         console.log(`Frame ${window._debugFrameCount}:`, speeds.join(', '));
         window._debugFrameCount++;
