@@ -180,7 +180,6 @@ function initPhysics() {
     engine.gravity.y = 0;
     engine.positionIterations = 10;
     engine.velocityIterations = 10;
-    console.log('velocityIterations:', engine.velocityIterations, 'positionIterations:', engine.positionIterations);
 }
 
 function rebuildStaticBodies() {
@@ -286,7 +285,6 @@ function buildTable() {
 }
 
 function transposeWorld() {
-    console.log('transposeWorld called', new Error().stack?.split('\n')[1] || '');
     const w = canvas.width, h = canvas.height;
     const ow = h, oh = w;
     const all = [cueBall, ...balls].filter(Boolean);
@@ -300,7 +298,6 @@ function transposeWorld() {
 }
 
 function resizeCanvas() {
-    console.log('resizeCanvas called');
     if (!canvas) return;
     const d = gameDims();
 
@@ -570,17 +567,11 @@ function handleInputEnd() {
     const power    = t * t * (3 - 2 * t);    // smoothstep
     const speed    = MIN_SHOT + power * (MAX_SHOT - MIN_SHOT);
 
-    console.log('Shot speed:', speed, 'pullDist:', pullDist, 'MAX_PULL:', MAX_PULL);
-    console.log('Cue ball position:', cueBall.position.x, cueBall.position.y);
-    console.log('Rack ball positions:', balls.map(b => `(${b.position.x.toFixed(0)}, ${b.position.y.toFixed(0)})`).join(' | '));
-    console.log('Aim angle (radians):', angle, 'Velocity direction:', Math.cos(angle).toFixed(3), Math.sin(angle).toFixed(3));
     sfxCue();
     Body.setVelocity(cueBall, {
         x: Math.cos(angle) * speed,
         y: Math.sin(angle) * speed
     });
-    console.log('Post-setVelocity cueBall velocity:', cueBall.velocity.x.toFixed(2), cueBall.velocity.y.toFixed(2));
-    window._logNextFrame = true;
 }
 
 function startNewGame(mode) {
@@ -633,30 +624,6 @@ function gameLoop() {
     if (gamePaused) return;
 
     Engine.update(engine, 1000 / 60);
-
-    // TEMP DEBUG: first-frame velocity after shot is set
-    if (window._logNextFrame) {
-        console.log('First-frame post-shot cueBall velocity:', cueBall.velocity.x.toFixed(2), cueBall.velocity.y.toFixed(2));
-        window._logNextFrame = false;
-    }
-    // TEMP DEBUG: log velocities during break
-    if (!window._debugFrameCount && Math.hypot(cueBall.velocity.x, cueBall.velocity.y) > 5) {
-        window._debugFrameCount = 0;
-    }
-    if (window._debugFrameCount !== undefined && window._debugFrameCount < 60) {
-        const speeds = [cueBall, ...balls].map(b => Math.hypot(b.velocity.x, b.velocity.y).toFixed(2));
-        console.log(`Frame ${window._debugFrameCount}:`, speeds.join(', '));
-        window._debugFrameCount++;
-    }
-    // TEMP DEBUG: position displacement tracking from frame 24 onward
-    if (window._debugFrameCount !== undefined && window._debugFrameCount === 25) {
-        window._debugPositions = [cueBall, ...balls].map(b => ({ x: b.position.x, y: b.position.y }));
-    }
-    if (window._debugPositions && window._debugFrameCount > 25 && window._debugFrameCount < 61) {
-        const current = [cueBall, ...balls].map(b => ({ x: b.position.x, y: b.position.y }));
-        const deltas = current.map((c, i) => Math.hypot(c.x - window._debugPositions[i].x, c.y - window._debugPositions[i].y).toFixed(1));
-        console.log(`Frame ${window._debugFrameCount} displacement from frame24:`, deltas.join(', '));
-    }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
