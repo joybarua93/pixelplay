@@ -610,23 +610,32 @@ function playAI() {
 
 function updateUIText() {
     const turnIndicator = document.getElementById('turn-indicator');
-    const matchStatus = document.getElementById('match-status');
     const banner = document.getElementById('ball-in-hand-banner');
 
     const p2Name = gameMode === 'pve' ? 'AI' : 'PLAYER 2';
     turnIndicator.innerText = currentPlayer === 1 ? "PLAYER 1'S TURN" : `${p2Name}'S TURN`;
     turnIndicator.style.color = currentPlayer === 1 ? '#38bdf8' : '#f87171';
 
-    const p1Color = playerColors[1];
-    const p2Color = playerColors[2];
-    const p1Remaining = p1Color
-        ? balls.filter(b => b.active && b.id !== 0 && b.id !== 8 && (p1Color === 'orange' ? b.id <= 7 : b.id >= 9)).length
-        : '-';
-    const p2Remaining = p2Color
-        ? balls.filter(b => b.active && b.id !== 0 && b.id !== 8 && (p2Color === 'orange' ? b.id <= 7 : b.id >= 9)).length
-        : '-';
+    document.getElementById('p1-score-text').innerText = p1Score;
+    document.getElementById('p2-score-text').innerText = p2Score;
 
-    matchStatus.innerText = `P1: ${p1Score} | P2: ${p2Score}   (${p1Remaining} vs ${p2Remaining} left)`;
+    const p1Dot = document.getElementById('p1-color-dot');
+    const p2Dot = document.getElementById('p2-color-dot');
+    const colorMap = { orange: '#fb923c', red: '#991b1b' };
+
+    if (playerColors[1]) {
+        p1Dot.style.display = 'inline-block';
+        p1Dot.style.background = colorMap[playerColors[1]];
+    } else {
+        p1Dot.style.display = 'none';
+    }
+
+    if (playerColors[2]) {
+        p2Dot.style.display = 'inline-block';
+        p2Dot.style.background = colorMap[playerColors[2]];
+    } else {
+        p2Dot.style.display = 'none';
+    }
 
     if (ballInHand && showBallInHandBanner) {
         banner.style.display = 'block';
@@ -916,6 +925,7 @@ function startGame(mode, difficulty) {
     showBallInHandBanner = false;
     gamePaused = false;
 
+    document.getElementById('game-container').classList.remove('menu-mode');
     document.getElementById('main-menu').classList.add('hidden');
     document.getElementById('ui-layer').style.display = 'block';
     document.getElementById('pp-back').style.display = 'none';
@@ -928,6 +938,7 @@ function startGame(mode, difficulty) {
 function resetToMenu() {
     gameMode = 'menu';
     gamePaused = false;
+    document.getElementById('game-container').classList.add('menu-mode');
     document.getElementById('main-menu').classList.remove('hidden');
     document.getElementById('message-overlay').classList.remove('visible');
     document.getElementById('ui-layer').style.display = 'none';

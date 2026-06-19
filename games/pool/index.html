@@ -72,9 +72,10 @@ body {
 }
 #ui-layer {
     position: absolute;
-    top: calc(-65px - env(safe-area-inset-top));
+    top: calc(8px + env(safe-area-inset-top));
     text-align: center;
     width: 100%;
+    padding-right: 60px;
     pointer-events: none;
     display: none;
 }
@@ -169,6 +170,20 @@ body {
 .btn-red    { background: #E84040; color: white; }
 .btn-navy   { background: #2A3660; color: white; }
 .hidden { display: none !important; }
+#game-container.menu-mode {
+    margin-right: 0 !important;
+    max-width: 100vw !important;
+    aspect-ratio: unset !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+#game-container.menu-mode #power-container,
+#game-container.menu-mode #pool-canvas {
+    display: none !important;
+}
+#game-container.menu-mode #main-menu {
+    border-radius: 0;
+}
 </style>
 </head>
 <body>
@@ -202,7 +217,7 @@ body {
 </div>
 
 <!-- Game container -->
-<div id="game-container">
+<div id="game-container" class="menu-mode">
 
   <!-- Main Menu -->
   <div id="main-menu">
@@ -235,7 +250,11 @@ body {
   <!-- In-game HUD -->
   <div id="ui-layer">
     <div id="turn-indicator" style="font-family:'Lilita One',cursive; font-size:1.2rem; color:#38bdf8; text-shadow:1px 1px 2px #000; text-transform:uppercase;">PLAYER 1'S TURN</div>
-    <div id="match-status" style="font-size:0.85rem; color:#9ca3af; margin-top:4px; font-weight:bold;">P1: 0 | P2: 0</div>
+    <div id="match-status" style="font-size:0.85rem; color:#9ca3af; margin-top:4px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:10px;">
+      <span style="display:flex; align-items:center; gap:4px;">P1: <span id="p1-score-text">0</span> <span id="p1-color-dot" style="display:none; width:10px; height:10px; border-radius:50%;"></span></span>
+      <span>|</span>
+      <span style="display:flex; align-items:center; gap:4px;">P2: <span id="p2-score-text">0</span> <span id="p2-color-dot" style="display:none; width:10px; height:10px; border-radius:50%;"></span></span>
+    </div>
   </div>
 
   <!-- Ball in hand banner -->
