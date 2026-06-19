@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Floppy Bird — PixelPlay</title>
     <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 <style>
   #pp-back {
     position: fixed !important;
-    top: 14px !important;
+    top: calc(14px + env(safe-area-inset-top)) !important;
     left: 14px !important;
     z-index: 999999 !important;
     transform: translateZ(1px) !important;
@@ -76,7 +76,7 @@
     </div>
 
     <button id="pause-btn" style="
-        position:fixed;top:14px;right:14px;z-index:2147483647;
+        position:fixed;top:calc(14px + env(safe-area-inset-top));right:14px;z-index:2147483647;
         width:40px;height:40px;background:rgba(42,54,96,0.85);color:#fff;
         font-size:18px;border:2px solid rgba(255,255,255,0.25);border-radius:50%;
         cursor:pointer;display:none;align-items:center;justify-content:center;

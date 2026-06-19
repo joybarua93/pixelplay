@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Ludo Dash — PixelPlay</title>
     
     <script src="matter.min.js"></script>
@@ -21,7 +21,7 @@
 
         /* Pause Button */
         #btn-pause {
-            position: absolute; top: 25px; right: 25px; width: 40px; height: 40px;
+            position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 25px; width: 40px; height: 40px;
             background: rgba(5, 5, 8, 0.8); border: 2px solid #a9b0c0; color: #a9b0c0; border-radius: 50%;
             font-size: 20px; font-weight: bold; cursor: pointer; z-index: 20;
             display: flex; justify-content: center; align-items: center; transition: 0.2s;
@@ -121,7 +121,7 @@
         }
     #pp-back {
         position: fixed;
-        top: 14px;
+        top: calc(14px + env(safe-area-inset-top));
         left: 14px;
         z-index: 99999;
         display: flex;
