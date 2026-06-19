@@ -77,28 +77,34 @@ const SoundEngine = {
 
     playBallClick(impulseMag) {
         if (!this.initialized) return;
-        // Cap the impulse magnitude
-        const clampedImpulse = Math.min(Math.max(impulseMag, 0.5), 15);
-        // Map impulse to velocity (0 to 1) for Tone.js
-        const velocity = clampedImpulse / 15;
-
-        // Slight random detune for organic feel
-        const pitch = 2500 + (Math.random() * 200 - 100);
-
-        // Play a very short note. PolySynth handles rapid concurrent hits.
-        this.ballSynth.triggerAttackRelease(pitch, "128n", Tone.now(), velocity * 0.8);
+        try {
+            const clampedImpulse = Math.min(Math.max(impulseMag, 0.5), 15);
+            const velocity = clampedImpulse / 15;
+            const pitch = 2500 + (Math.random() * 200 - 100);
+            this.ballSynth.triggerAttackRelease(pitch, "128n", Tone.now(), velocity * 0.8);
+        } catch (e) {
+            console.warn('SoundEngine.playBallClick failed silently:', e.message);
+        }
     },
 
     playCushionThump(velocityMag) {
         if (!this.initialized) return;
-        const clampedVelocity = Math.min(Math.max(velocityMag, 1), 15);
-        const velocity = clampedVelocity / 15;
-        this.cushionSynth.triggerAttackRelease("G2", "16n", Tone.now(), velocity * 0.6);
+        try {
+            const clampedVelocity = Math.min(Math.max(velocityMag, 1), 15);
+            const velocity = clampedVelocity / 15;
+            this.cushionSynth.triggerAttackRelease("G2", "16n", Tone.now(), velocity * 0.6);
+        } catch (e) {
+            console.warn('SoundEngine.playCushionThump failed silently:', e.message);
+        }
     },
 
     playPocketDrop() {
         if (!this.initialized) return;
-        this.pocketSynth.triggerAttackRelease("C2", "8n", Tone.now(), 0.9);
+        try {
+            this.pocketSynth.triggerAttackRelease("C2", "8n", Tone.now(), 0.9);
+        } catch (e) {
+            console.warn('SoundEngine.playPocketDrop failed silently:', e.message);
+        }
     }
 };
 
@@ -877,9 +883,17 @@ function draw() {
 
 function loop() {
     if (!gamePaused) {
-        updatePhysics();
+        try {
+            updatePhysics();
+        } catch (e) {
+            console.error('updatePhysics() threw an error, recovering:', e);
+        }
     }
-    draw();
+    try {
+        draw();
+    } catch (e) {
+        console.error('draw() threw an error, recovering:', e);
+    }
     requestAnimationFrame(loop);
 }
 
