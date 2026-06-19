@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Air Hockey — PixelPlay</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>🏒</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -48,7 +48,7 @@
 <body>
 <div id="start-screen">
   <a id="pp-back" href="../index.html" style="
-    position:fixed;top:14px;left:14px;z-index:2147483647;
+    position:fixed;top:calc(14px + env(safe-area-inset-top));left:14px;z-index:2147483647;
     display:flex;align-items:center;gap:6px;
     padding:8px 16px 8px 12px;
     background:#2A3660;color:#fff;
@@ -487,7 +487,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape') window.togglePause(
 </script>
 
 <button id="pause-btn" onclick="togglePause()" style="
-    position:fixed;top:6px;right:14px;z-index:2147483647;
+    position:fixed;top:calc(14px + env(safe-area-inset-top));right:14px;z-index:2147483647;
     width:40px;height:40px;
     background:rgba(42,54,96,0.85);color:#fff;
     font-size:18px;border:2px solid rgba(255,255,255,0.25);
