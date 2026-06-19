@@ -72,10 +72,9 @@ body {
 }
 #ui-layer {
     position: absolute;
-    top: calc(8px + env(safe-area-inset-top));
+    top: calc(28px + env(safe-area-inset-top));
     text-align: center;
     width: 100%;
-    padding-right: 60px;
     pointer-events: none;
     display: none;
 }
@@ -190,7 +189,7 @@ body {
 
 <!-- PixelPlay back button — visible on title screen only -->
 <div id="pp-back" style="position:fixed; top:calc(14px + env(safe-area-inset-top)); left:16px; z-index:2147483647; display:block;">
-  <a href="../index.html" style="display:inline-flex; align-items:center; gap:6px; background:#2A3660; color:#fff; font-family:'Lilita One',cursive; font-size:15px; padding:8px 14px; border-radius:999px; text-decoration:none;">← PixelPlay</a>
+  <a href="../../index.html" style="display:inline-flex; align-items:center; gap:6px; background:#2A3660; color:#fff; font-family:'Lilita One',cursive; font-size:15px; padding:8px 14px; border-radius:999px; text-decoration:none;">← PixelPlay</a>
 </div>
 
 <!-- Pause button — visible during gameplay only -->
@@ -203,7 +202,7 @@ body {
     <button onclick="resumeGame()" class="menu-btn btn-green" style="width:220px;">Resume</button>
     <button onclick="restartGame()" class="menu-btn btn-navy" style="width:220px;">Restart</button>
     <button onclick="goToTitle()" class="menu-btn btn-navy" style="width:220px;">Title Screen</button>
-    <a href="../index.html" id="pause-back-link" class="menu-btn btn-navy" style="width:220px; text-align:center; text-decoration:none; display:block; padding:0.75rem 2rem;">← PixelPlay</a>
+    <a href="../../index.html" id="pause-back-link" class="menu-btn btn-navy" style="width:220px; text-align:center; text-decoration:none; display:block; padding:0.75rem 2rem;">← PixelPlay</a>
   </div>
 </div>
 
@@ -250,7 +249,7 @@ body {
   <!-- In-game HUD -->
   <div id="ui-layer">
     <div id="turn-indicator" style="font-family:'Lilita One',cursive; font-size:1.2rem; color:#38bdf8; text-shadow:1px 1px 2px #000; text-transform:uppercase;">PLAYER 1'S TURN</div>
-    <div id="match-status" style="font-size:0.85rem; color:#9ca3af; margin-top:4px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:10px;">
+    <div id="match-status" style="font-size:0.85rem; color:#9ca3af; margin-top:6px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:10px;">
       <span style="display:flex; align-items:center; gap:4px;">P1: <span id="p1-score-text">0</span> <span id="p1-color-dot" style="display:none; width:10px; height:10px; border-radius:50%;"></span></span>
       <span>|</span>
       <span style="display:flex; align-items:center; gap:4px;">P2: <span id="p2-score-text">0</span> <span id="p2-color-dot" style="display:none; width:10px; height:10px; border-radius:50%;"></span></span>
@@ -275,5 +274,25 @@ body {
 <script src="../../js/capacitor-nav.js"></script>
 <script src="tone.min.js"></script>
 <script src="game.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var navTarget = (window.Capacitor && window.Capacitor.isNativePlatform())
+        ? '../../app.html' : '../../index.html';
+    var ppBack = document.querySelector('#pp-back a');
+    if (ppBack) {
+        ppBack.addEventListener('pointerdown', function(e) {
+            e.preventDefault();
+            window.location.href = navTarget;
+        });
+    }
+    var pauseBack = document.getElementById('pause-back-link');
+    if (pauseBack) {
+        pauseBack.addEventListener('pointerdown', function(e) {
+            e.preventDefault();
+            window.location.href = navTarget;
+        });
+    }
+});
+</script>
 </body>
 </html>
