@@ -104,11 +104,12 @@
 
     .top-bar {
       background: #2A3660;
-      height: 48px;
+      height: calc(48px + env(safe-area-inset-top));
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 16px;
+      padding-top: env(safe-area-inset-top);
       flex-shrink: 0;
       position: relative;
     }

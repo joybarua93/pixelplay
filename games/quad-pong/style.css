@@ -51,8 +51,8 @@ body {
 }
 
 .bottom-right { bottom: 20px; right: 20px; text-align: right; }
-.top-left { top: 20px; left: 20px; }
-.top-right { top: 20px; right: 20px; text-align: right; }
+.top-left { top: calc(20px + env(safe-area-inset-top)); left: 20px; }
+.top-right { top: calc(20px + env(safe-area-inset-top)); right: 20px; text-align: right; }
 .bottom-left { bottom: 20px; left: 20px; }
 
 .hidden { display: none !important; }

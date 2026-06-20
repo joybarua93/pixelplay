@@ -39,7 +39,7 @@ body {
 
 #score-board {
     position: absolute;
-    top: 64px;
+    top: calc(14px + env(safe-area-inset-top));
     left: 14px;
     color: #fff;
     font-size: 16px;

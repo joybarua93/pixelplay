@@ -82,7 +82,7 @@
         .rules-box li b { color: #00d4ff; display: block; margin-bottom: 2px; font-size: 15px; }
 
         /* In-Game UI */
-        #ui-header { position: absolute; top: 30px; left: 0; width: 100%; text-align: center; pointer-events: none; z-index: 5; }
+        #ui-header { position: absolute; top: calc(30px + env(safe-area-inset-top)); left: 0; width: 100%; text-align: center; pointer-events: none; z-index: 5; }
         #ui-header h2 { font-size: 28px; letter-spacing: 3px; text-shadow: 0 0 15px currentColor; margin-bottom: 5px; transition: color 0.3s ease; }
         #ui-header p { color: #a9b0c0; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; font-weight: bold; margin-top: 5px; }
 
